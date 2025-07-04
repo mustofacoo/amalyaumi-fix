@@ -1,0 +1,1780 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Ceklis Harian Pegawai - Enhanced</title>
+    
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
+    
+    <!-- Tailwind CSS for better responsive design -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiU2lzdGVtIENla2xpcyBIYXJpYW4iLCJzaG9ydF9uYW1lIjoiQ2VrbGlzIEhhcmlhbiIsInN0YXJ0X3VybCI6Ii8iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjZmZmZmZmIiwidGhlbWVfY29sb3IiOiIjRkY3RDI5In0=">
+    
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #FF7D29;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #e66a1f;
+        }
+
+        /* Custom animations */
+        @keyframes slideInFromTop {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideInFromBottom {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeInScale {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .slide-in-top {
+            animation: slideInFromTop 0.5s ease-out;
+        }
+
+        .slide-in-bottom {
+            animation: slideInFromBottom 0.5s ease-out;
+        }
+
+        .fade-in-scale {
+            animation: fadeInScale 0.3s ease-out;
+        }
+
+        /* Loading skeleton */
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% {
+                background-position: 200% 0;
+            }
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        /* Dark mode styles */
+        .dark {
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 50%, #4a5568 100%);
+        }
+
+        .dark .bg-white {
+            background-color: #2d3748 !important;
+        }
+
+        .dark .bg-gray-50 {
+            background-color: #374151 !important;
+        }
+
+        .dark .text-gray-900 {
+            color: #f7fafc !important;
+        }
+
+        .dark .text-gray-600 {
+            color: #cbd5e0 !important;
+        }
+
+        .dark .border-gray-200 {
+            border-color: #4a5568 !important;
+        }
+
+        /* Print styles */
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+
+    <script>
+        // Tailwind configuration
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#fff7ed',
+                            500: '#FF7D29',
+                            600: '#e66a1f',
+                            700: '#cc5d1a'
+                        }
+                    },
+                    animation: {
+                        'bounce-slow': 'bounce 3s infinite',
+                        'pulse-slow': 'pulse 3s infinite',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 transition-colors duration-300" 
+      x-data="checklistApp()" 
+      x-init="init()" 
+      :class="{ 'dark': darkMode }">
+
+    <!-- Loading Screen -->
+    <div x-show="loading" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 bg-gradient-to-br from-primary-500 to-orange-400 flex items-center justify-center z-50">
+        <div class="text-center text-white">
+            <div class="animate-spin rounded-full h-16 w-16 border-4 border-white border-t-transparent mb-4 mx-auto"></div>
+            <h2 class="text-2xl font-bold mb-2">Sistem Ceklis Harian</h2>
+            <p class="text-lg opacity-90">Memuat aplikasi...</p>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="fixed top-4 right-4 z-40 space-y-2" x-show="notifications.length > 0">
+        <template x-for="notification in notifications" :key="notification.id">
+            <div x-show="notification.show"
+                 x-transition:enter="transition ease-out duration-300 transform"
+                 x-transition:enter-start="translate-x-full opacity-0"
+                 x-transition:enter-end="translate-x-0 opacity-100"
+                 x-transition:leave="transition ease-in duration-200 transform"
+                 x-transition:leave-start="translate-x-0 opacity-100"
+                 x-transition:leave-end="translate-x-full opacity-0"
+                 class="max-w-sm rounded-lg shadow-lg p-4 pointer-events-auto"
+                 :class="{
+                     'bg-green-500 text-white': notification.type === 'success',
+                     'bg-red-500 text-white': notification.type === 'error',
+                     'bg-blue-500 text-white': notification.type === 'info',
+                     'bg-yellow-500 text-white': notification.type === 'warning'
+                 }">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <i :class="{
+                            'fas fa-check-circle': notification.type === 'success',
+                            'fas fa-exclamation-circle': notification.type === 'error',
+                            'fas fa-info-circle': notification.type === 'info',
+                            'fas fa-exclamation-triangle': notification.type === 'warning'
+                        }" class="mr-2"></i>
+                        <span x-text="notification.message"></span>
+                    </div>
+                    <button @click="removeNotification(notification.id)" class="ml-2">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container mx-auto px-4 py-6 max-w-7xl">
+        
+        <!-- Login Screen -->
+        <div x-show="!isLoggedIn" 
+             x-transition:enter="transition ease-out duration-500"
+             x-transition:enter-start="opacity-0 transform scale-95"
+             x-transition:enter-end="opacity-100 transform scale-100"
+             class="min-h-screen flex items-center justify-center">
+            
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 w-full max-w-md transform transition-all duration-300 hover:shadow-3xl">
+                <!-- Dark Mode Toggle (Top Right) -->
+                <div class="flex justify-end mb-4">
+                    <button @click="toggleDarkMode()" 
+                            class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                        <i x-show="!darkMode" class="fas fa-moon"></i>
+                        <i x-show="darkMode" class="fas fa-sun"></i>
+                    </button>
+                </div>
+
+                <div class="text-center mb-8">
+                    <div class="mx-auto w-16 h-16 bg-gradient-to-br from-primary-500 to-orange-400 rounded-full flex items-center justify-center mb-4">
+                        <i class="fas fa-clipboard-check text-2xl text-white"></i>
+                    </div>
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Sistem Ceklis Harian</h1>
+                    <p class="text-gray-600 dark:text-gray-400">Kelola tugas harian dengan mudah</p>
+                </div>
+
+                <!-- Mode Selector -->
+                <div class="grid grid-cols-2 gap-3 mb-6">
+                    <button @click="loginMode = 'user'" 
+                            :class="loginMode === 'user' ? 'bg-primary-500 text-white shadow-lg transform scale-105' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'"
+                            class="py-3 px-4 rounded-xl font-semibold transition-all duration-200 hover:shadow-md">
+                        <i class="fas fa-user mr-2"></i>Pegawai
+                    </button>
+                    <button @click="loginMode = 'admin'" 
+                            :class="loginMode === 'admin' ? 'bg-primary-500 text-white shadow-lg transform scale-105' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'"
+                            class="py-3 px-4 rounded-xl font-semibold transition-all duration-200 hover:shadow-md">
+                        <i class="fas fa-user-shield mr-2"></i>Admin
+                    </button>
+                </div>
+
+                <!-- User Login -->
+                <div x-show="loginMode === 'user'" x-transition:enter="transition ease-out duration-300">
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <i class="fas fa-user mr-2"></i>Pilih Nama Anda
+                        </label>
+                        <select x-model="selectedEmployee" 
+                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200">
+                            <option value="">-- Pilih Nama --</option>
+                            <template x-for="employee in employees" :key="employee">
+                                <option :value="employee" x-text="employee"></option>
+                            </template>
+                        </select>
+                    </div>
+                    <button @click="loginAsUser()" 
+                            :disabled="!selectedEmployee || isLoggingIn"
+                            :class="!selectedEmployee || isLoggingIn ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg transform hover:scale-105'"
+                            class="w-full bg-gradient-to-r from-primary-500 to-orange-400 text-white py-3 px-6 rounded-xl font-semibold transition-all duration-200 disabled:transform-none">
+                        <span x-show="!isLoggingIn">
+                            <i class="fas fa-sign-in-alt mr-2"></i>Masuk sebagai Pegawai
+                        </span>
+                        <span x-show="isLoggingIn" class="flex items-center justify-center">
+                            <div class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                            Masuk...
+                        </span>
+                    </button>
+                </div>
+
+                <!-- Admin Login -->
+                <div x-show="loginMode === 'admin'" x-transition:enter="transition ease-out duration-300">
+                    <div class="space-y-4 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <i class="fas fa-user-shield mr-2"></i>Username Admin
+                            </label>
+                            <input type="text" 
+                                   x-model="adminCredentials.username"
+                                   @keyup.enter="loginAsAdmin()"
+                                   class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
+                                   placeholder="Masukkan username">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <i class="fas fa-lock mr-2"></i>Password
+                            </label>
+                            <div class="relative">
+                                <input :type="showPassword ? 'text' : 'password'" 
+                                       x-model="adminCredentials.password"
+                                       @keyup.enter="loginAsAdmin()"
+                                       class="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
+                                       placeholder="Masukkan password">
+                                <button type="button" 
+                                        @click="showPassword = !showPassword"
+                                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300">
+                                    <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <button @click="loginAsAdmin()" 
+                            :disabled="!adminCredentials.username || !adminCredentials.password || isLoggingIn"
+                            :class="!adminCredentials.username || !adminCredentials.password || isLoggingIn ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg transform hover:scale-105'"
+                            class="w-full bg-gradient-to-r from-primary-500 to-orange-400 text-white py-3 px-6 rounded-xl font-semibold transition-all duration-200 disabled:transform-none">
+                        <span x-show="!isLoggingIn">
+                            <i class="fas fa-sign-in-alt mr-2"></i>Login Admin
+                        </span>
+                        <span x-show="isLoggingIn" class="flex items-center justify-center">
+                            <div class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                            Login...
+                        </span>
+                    </button>
+                </div>
+
+                <!-- Footer -->
+                <div class="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
+                    <p>Versi 2.0 - Enhanced with Alpine.js</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Application -->
+        <div x-show="isLoggedIn" 
+             x-transition:enter="transition ease-out duration-500"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             class="space-y-6">
+
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-primary-500 to-orange-400 rounded-2xl shadow-xl p-6 text-white slide-in-top">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <div>
+                        <h1 class="text-2xl lg:text-3xl font-bold mb-2">
+                            <i class="fas fa-clipboard-check mr-3"></i>Sistem Ceklis Harian Pegawai
+                        </h1>
+                        <p class="text-lg opacity-90" x-text="isAdmin ? 'Panel Administrator' : `Selamat datang, ${currentUser}`"></p>
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                        <!-- Real-time Clock -->
+                        <div class="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2 text-center">
+                            <div class="text-sm opacity-75">Waktu Saat Ini</div>
+                            <div class="font-bold text-lg" x-text="currentTime"></div>
+                        </div>
+                        
+                        <!-- Online Status -->
+                        <div class="flex items-center space-x-2">
+                            <div :class="isOnline ? 'bg-green-400' : 'bg-red-400'" class="w-3 h-3 rounded-full"></div>
+                            <span class="text-sm" x-text="isOnline ? 'Online' : 'Offline'"></span>
+                        </div>
+
+                        <!-- Dark Mode Toggle -->
+                        <button @click="toggleDarkMode()" 
+                                class="p-2 rounded-lg bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors">
+                            <i x-show="!darkMode" class="fas fa-moon"></i>
+                            <i x-show="darkMode" class="fas fa-sun"></i>
+                        </button>
+
+                        <!-- Logout Button -->
+                        <button @click="logout()" 
+                                class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors flex items-center space-x-2">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span class="hidden sm:inline">Logout</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-2 slide-in-bottom">
+                <nav class="flex flex-wrap gap-2">
+                    <button @click="activeTab = 'daily'" 
+                            :class="activeTab === 'daily' ? 'bg-primary-500 text-white shadow-md' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
+                            class="px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2">
+                        <i class="fas fa-calendar-day"></i>
+                        <span>Ceklis Harian</span>
+                    </button>
+                    
+                    <template x-if="isAdmin">
+                        <button @click="activeTab = 'admin'" 
+                                :class="activeTab === 'admin' ? 'bg-primary-500 text-white shadow-md' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
+                                class="px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2">
+                            <i class="fas fa-cog"></i>
+                            <span>Admin Panel</span>
+                        </button>
+                    </template>
+
+                    <template x-if="isAdmin">
+                        <button @click="activeTab = 'analytics'" 
+                                :class="activeTab === 'analytics' ? 'bg-primary-500 text-white shadow-md' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
+                                class="px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Analytics</span>
+                        </button>
+                    </template>
+
+                    <template x-if="isAdmin">
+                        <button @click="activeTab = 'history'" 
+                                :class="activeTab === 'history' ? 'bg-primary-500 text-white shadow-md' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
+                                class="px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2">
+                            <i class="fas fa-history"></i>
+                            <span>Riwayat</span>
+                        </button>
+                    </template>
+                </nav>
+            </div>
+
+            <!-- Tab Contents -->
+            <div class="fade-in-scale">
+                
+                <!-- Daily Checklist Tab -->
+                <div x-show="activeTab === 'daily'" 
+                     x-transition:enter="transition ease-out duration-300"
+                     x-transition:enter-start="opacity-0 transform translate-y-4"
+                     x-transition:enter-end="opacity-100 transform translate-y-0">
+                    
+                    <!-- Search and Filter (Admin only) -->
+                    <template x-if="isAdmin">
+                        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
+                            <div class="flex flex-col sm:flex-row gap-4">
+                                <div class="flex-1">
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        <i class="fas fa-user mr-2"></i>Pilih Pegawai
+                                    </label>
+                                    <select x-model="selectedEmployeeForChecklist" 
+                                            @change="loadEmployeeChecklist()"
+                                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                                        <option value="">-- Pilih Pegawai --</option>
+                                        <template x-for="employee in employees" :key="employee">
+                                            <option :value="employee" x-text="employee"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                                <div class="flex-1">
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        <i class="fas fa-search mr-2"></i>Cari Tugas
+                                    </label>
+                                    <input type="text" 
+                                           x-model="taskSearch"
+                                           class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                           placeholder="Ketik untuk mencari tugas...">
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Checklist Container -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                        <!-- User Title (for non-admin) -->
+                        <template x-if="!isAdmin">
+                            <div class="mb-6">
+                                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                                    <i class="fas fa-tasks mr-3 text-primary-500"></i>
+                                    Daftar Tugas Hari Ini
+                                </h2>
+                                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                    <p class="text-gray-600 dark:text-gray-400" x-text="getCurrentDateString()"></p>
+                                    <div class="flex items-center space-x-4">
+                                        <div class="text-sm">
+                                            <span class="text-gray-600 dark:text-gray-400">Progress:</span>
+                                            <span class="font-semibold text-primary-500" x-text="getCompletionPercentage() + '%'"></span>
+                                        </div>
+                                        <div class="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                            <div class="bg-gradient-to-r from-primary-500 to-orange-400 h-2 rounded-full transition-all duration-500"
+                                                 :style="`width: ${getCompletionPercentage()}%`"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Admin Title -->
+                        <template x-if="isAdmin && selectedEmployeeForChecklist">
+                            <div class="mb-6">
+                                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                                    <i class="fas fa-clipboard-check mr-3 text-primary-500"></i>
+                                    Ceklis untuk <span x-text="selectedEmployeeForChecklist"></span>
+                                </h2>
+                                <p class="text-gray-600 dark:text-gray-400" x-text="getCurrentDateString()"></p>
+                            </div>
+                        </template>
+
+                        <!-- Loading State -->
+                        <div x-show="loadingChecklist" class="space-y-4">
+                            <template x-for="i in 6" :key="i">
+                                <div class="skeleton h-16 rounded-lg"></div>
+                            </template>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div x-show="!loadingChecklist && (!currentChecklist || currentChecklist.length === 0)" 
+                             class="text-center py-12">
+                            <div class="mx-auto w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
+                                <i class="fas fa-clipboard-list text-2xl text-gray-400"></i>
+                            </div>
+                            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                                <span x-show="isAdmin && !selectedEmployeeForChecklist">Pilih pegawai untuk melihat ceklis</span>
+                                <span x-show="!isAdmin || selectedEmployeeForChecklist">Tidak ada tugas tersedia</span>
+                            </h3>
+                            <p class="text-gray-500 dark:text-gray-400">
+                                <span x-show="isAdmin && !selectedEmployeeForChecklist">Gunakan dropdown di atas untuk memilih pegawai</span>
+                                <span x-show="!isAdmin || selectedEmployeeForChecklist">Silakan tambahkan tugas di panel admin</span>
+                            </p>
+                        </div>
+
+                        <!-- Checklist Items -->
+                        <div x-show="!loadingChecklist && currentChecklist && currentChecklist.length > 0" 
+                             class="space-y-3">
+                            <template x-for="(task, index) in filteredTasks" :key="task">
+                                <div class="group relative bg-gray-50 dark:bg-gray-700 rounded-lg p-4 transition-all duration-200 hover:shadow-md border-2 border-transparent"
+                                     :class="{ 'border-green-300 bg-green-50 dark:bg-green-900/20': isTaskCompleted(task), 'hover:border-primary-200': !isTaskCompleted(task) }">
+                                    
+                                    <div class="flex items-center space-x-4">
+                                        <!-- Checkbox -->
+                                        <div class="relative">
+                                            <input type="checkbox" 
+                                                   :id="`task-${index}`"
+                                                   :checked="isTaskCompleted(task)"
+                                                   @change="toggleTask(task, $event.target.checked)"
+                                                   class="w-5 h-5 text-primary-500 border-2 border-gray-300 dark:border-gray-600 rounded focus:ring-primary-500 focus:ring-2 transition-all duration-200">
+                                            
+                                            <!-- Check Animation -->
+                                            <div x-show="isTaskCompleted(task)" 
+                                                 x-transition:enter="transition ease-out duration-300 transform"
+                                                 x-transition:enter-start="scale-0 opacity-0"
+                                                 x-transition:enter-end="scale-100 opacity-100"
+                                                 class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                                <i class="fas fa-check text-white text-xs"></i>
+                                            </div>
+                                        </div>
+
+                                        <!-- Task Label -->
+                                        <label :for="`task-${index}`" 
+                                               class="flex-1 cursor-pointer font-medium transition-all duration-200"
+                                               :class="isTaskCompleted(task) ? 'text-green-700 dark:text-green-400 line-through' : 'text-gray-900 dark:text-white'">
+                                            <span x-text="task"></span>
+                                        </label>
+
+                                        <!-- Task Status Badge -->
+                                        <div class="flex items-center space-x-2">
+                                            <div x-show="isTaskCompleted(task)" 
+                                                 x-transition:enter="transition ease-out duration-300"
+                                                 x-transition:enter-start="opacity-0 scale-95"
+                                                 x-transition:enter-end="opacity-100 scale-100"
+                                                 class="px-2 py-1 text-xs font-semibold bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full">
+                                                <i class="fas fa-check mr-1"></i>Selesai
+                                            </div>
+                                            
+                                            <div x-show="!isTaskCompleted(task)" 
+                                                 class="px-2 py-1 text-xs font-semibold bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded-full">
+                                                <i class="fas fa-clock mr-1"></i>Pending
+                                            </div>
+
+                                            <!-- Timestamp -->
+                                            <div x-show="getTaskTimestamp(task)" 
+                                                 class="text-xs text-gray-500 dark:text-gray-400"
+                                                 x-text="getTaskTimestamp(task)"></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Progress bar for individual task (subtle) -->
+                                    <div x-show="isTaskCompleted(task)" 
+                                         x-transition:enter="transition ease-out duration-500"
+                                         x-transition:enter-start="scale-x-0"
+                                         x-transition:enter-end="scale-x-100"
+                                         class="mt-2 h-1 bg-gradient-to-r from-green-400 to-green-500 rounded-full transform origin-left"></div>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Bulk Actions (Admin only) -->
+                        <template x-if="isAdmin && selectedEmployeeForChecklist && filteredTasks.length > 0">
+                            <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                                <div class="flex flex-wrap gap-3">
+                                    <button @click="markAllTasks(true)" 
+                                            class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors flex items-center space-x-2">
+                                        <i class="fas fa-check-double"></i>
+                                        <span>Tandai Semua Selesai</span>
+                                    </button>
+                                    <button @click="markAllTasks(false)" 
+                                            class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors flex items-center space-x-2">
+                                        <i class="fas fa-undo"></i>
+                                        <span>Reset Semua</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Admin Panel Tab -->
+                <template x-if="isAdmin">
+                    <div x-show="activeTab === 'admin'" 
+                         x-transition:enter="transition ease-out duration-300"
+                         x-transition:enter-start="opacity-0 transform translate-y-4"
+                         x-transition:enter-end="opacity-100 transform translate-y-0"
+                         class="space-y-6">
+
+                        <!-- Firebase Configuration -->
+                        <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
+                            <h3 class="text-xl font-bold mb-4">
+                                <i class="fas fa-cloud mr-2"></i>Konfigurasi Firebase
+                            </h3>
+                            
+                            <!-- Connection Status -->
+                            <div class="mb-4 p-3 rounded-lg"
+                                 :class="firebaseConnected ? 'bg-green-500/20 border border-green-400' : 'bg-red-500/20 border border-red-400'">
+                                <div class="flex items-center space-x-2">
+                                    <div :class="firebaseConnected ? 'bg-green-400' : 'bg-red-400'" class="w-3 h-3 rounded-full"></div>
+                                    <span class="font-medium" x-text="firebaseConnected ? 'Terhubung ke Firebase' : 'Tidak Terhubung'"></span>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">API Key</label>
+                                    <input type="text" 
+                                           x-model="firebaseConfig.apiKey"
+                                           class="w-full px-3 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/70 focus:ring-2 focus:ring-white/50"
+                                           placeholder="Masukkan API Key">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Auth Domain</label>
+                                    <input type="text" 
+                                           x-model="firebaseConfig.authDomain"
+                                           class="w-full px-3 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/70 focus:ring-2 focus:ring-white/50"
+                                           placeholder="project.firebaseapp.com">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Database URL</label>
+                                    <input type="text" 
+                                           x-model="firebaseConfig.databaseURL"
+                                           class="w-full px-3 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/70 focus:ring-2 focus:ring-white/50"
+                                           placeholder="https://project.firebaseio.com/">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Project ID</label>
+                                    <input type="text" 
+                                           x-model="firebaseConfig.projectId"
+                                           class="w-full px-3 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/70 focus:ring-2 focus:ring-white/50"
+                                           placeholder="project-id">
+                                </div>
+                            </div>
+
+                            <div class="flex space-x-3">
+                                <button @click="connectFirebase()" 
+                                        :disabled="connectingFirebase"
+                                        class="px-4 py-2 bg-white text-blue-600 rounded-lg font-medium hover:bg-gray-100 transition-colors disabled:opacity-50">
+                                    <span x-show="!connectingFirebase">
+                                        <i class="fas fa-plug mr-2"></i>Hubungkan
+                                    </span>
+                                    <span x-show="connectingFirebase">
+                                        <div class="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent inline-block mr-2"></div>
+                                        Menghubungkan...
+                                    </span>
+                                </button>
+                                <button @click="disconnectFirebase()" 
+                                        class="px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors">
+                                    <i class="fas fa-unlink mr-2"></i>Putus
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Employee Management -->
+                        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                                <i class="fas fa-users mr-2 text-primary-500"></i>Kelola Pegawai
+                            </h3>
+                            
+                            <!-- Add Employee -->
+                            <div class="flex space-x-3 mb-6">
+                                <input type="text" 
+                                       x-model="newEmployee"
+                                       @keyup.enter="addEmployee()"
+                                       class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                       placeholder="Nama pegawai baru">
+                                <button @click="addEmployee()" 
+                                        :disabled="!newEmployee.trim()"
+                                        class="px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <i class="fas fa-plus mr-2"></i>Tambah
+                                </button>
+                            </div>
+
+                            <!-- Employee List -->
+                            <div class="space-y-2">
+                                <template x-for="(employee, index) in employees" :key="employee">
+                                    <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-8 h-8 bg-primary-500 text-white rounded-full flex items-center justify-center font-semibold text-sm"
+                                                 x-text="employee.charAt(0).toUpperCase()"></div>
+                                            <span class="font-medium text-gray-900 dark:text-white" x-text="employee"></span>
+                                            <span x-show="defaultEmployees.includes(employee)" 
+                                                  class="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">
+                                                Default
+                                            </span>
+                                        </div>
+                                        <button x-show="!defaultEmployees.includes(employee)" 
+                                                @click="removeEmployee(employee)" 
+                                                class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- Task Management -->
+                        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                                <i class="fas fa-tasks mr-2 text-primary-500"></i>Kelola Tugas
+                            </h3>
+                            
+                            <!-- Add Task -->
+                            <div class="flex space-x-3 mb-6">
+                                <input type="text" 
+                                       x-model="newTask"
+                                       @keyup.enter="addTask()"
+                                       class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                       placeholder="Nama tugas baru">
+                                <button @click="addTask()" 
+                                        :disabled="!newTask.trim()"
+                                        class="px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <i class="fas fa-plus mr-2"></i>Tambah
+                                </button>
+                            </div>
+
+                            <!-- Task List -->
+                            <div class="space-y-2">
+                                <template x-for="(task, index) in tasks" :key="task">
+                                    <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center">
+                                                <i class="fas fa-check text-sm"></i>
+                                            </div>
+                                            <span class="font-medium text-gray-900 dark:text-white" x-text="task"></span>
+                                            <span x-show="defaultTasks.includes(task)" 
+                                                  class="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">
+                                                Default
+                                            </span>
+                                        </div>
+                                        <button x-show="!defaultTasks.includes(task)" 
+                                                @click="removeTask(task)" 
+                                                class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- Data Export -->
+                        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                                <i class="fas fa-download mr-2 text-primary-500"></i>Export Data
+                            </h3>
+                            
+                            <div class="flex flex-wrap gap-3">
+                                <button @click="exportData('json')" 
+                                        class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors flex items-center space-x-2">
+                                    <i class="fas fa-file-code"></i>
+                                    <span>Export JSON</span>
+                                </button>
+                                <button @click="exportData('csv')" 
+                                        class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors flex items-center space-x-2">
+                                    <i class="fas fa-file-excel"></i>
+                                    <span>Export CSV</span>
+                                </button>
+                                <button @click="printReport()" 
+                                        class="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-medium transition-colors flex items-center space-x-2">
+                                    <i class="fas fa-print"></i>
+                                    <span>Print Report</span>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </template>
+
+                <!-- Analytics Tab -->
+                <template x-if="isAdmin">
+                    <div x-show="activeTab === 'analytics'" 
+                         x-transition:enter="transition ease-out duration-300"
+                         x-transition:enter-start="opacity-0 transform translate-y-4"
+                         x-transition:enter-end="opacity-100 transform translate-y-0"
+                         class="space-y-6">
+
+                        <!-- Month Selector -->
+                        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+                                    <i class="fas fa-chart-line mr-2 text-primary-500"></i>Analytics Dashboard
+                                </h3>
+                                <div class="flex items-center space-x-4">
+                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Periode:</label>
+                                    <select x-model="selectedMonth" 
+                                            @change="loadAnalytics()"
+                                            class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                                        <template x-for="month in availableMonths" :key="month.value">
+                                            <option :value="month.value" x-text="month.label"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Summary Cards -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-blue-100 text-sm font-medium">Total Pegawai</p>
+                                        <p class="text-3xl font-bold" x-text="employees.length"></p>
+                                    </div>
+                                    <div class="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-users text-xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-green-100 text-sm font-medium">Total Tugas</p>
+                                        <p class="text-3xl font-bold" x-text="tasks.length"></p>
+                                    </div>
+                                    <div class="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-tasks text-xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl shadow-lg p-6 text-white">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-yellow-100 text-sm font-medium">Rata-rata Completion</p>
+                                        <p class="text-3xl font-bold" x-text="getAverageCompletion() + '%'"></p>
+                                    </div>
+                                    <div class="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-percentage text-xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-purple-100 text-sm font-medium">Top Performer</p>
+                                        <p class="text-xl font-bold" x-text="getTopPerformer()"></p>
+                                    </div>
+                                    <div class="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-trophy text-xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Employee Performance -->
+                        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                            <h4 class="text-lg font-bold text-gray-900 dark:text-white mb-6">
+                                <i class="fas fa-chart-bar mr-2 text-primary-500"></i>Performance per Pegawai
+                            </h4>
+                            
+                            <div class="space-y-6">
+                                <template x-for="employee in employees" :key="employee">
+                                    <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <h5 class="font-semibold text-gray-900 dark:text-white" x-text="employee"></h5>
+                                            <span class="text-sm font-medium text-primary-500" 
+                                                  x-text="getEmployeeCompletion(employee) + '%'"></span>
+                                        </div>
+                                        
+                                        <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-3 mb-4">
+                                            <div class="bg-gradient-to-r from-primary-500 to-orange-400 h-3 rounded-full transition-all duration-500"
+                                                 :style="`width: ${getEmployeeCompletion(employee)}%`"></div>
+                                        </div>
+
+                                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                            <template x-for="task in tasks" :key="task">
+                                                <div class="text-center p-2 bg-white dark:bg-gray-800 rounded-lg">
+                                                    <div class="text-xs text-gray-600 dark:text-gray-400 mb-1" x-text="task"></div>
+                                                    <div class="text-sm font-semibold"
+                                                         :class="getTaskCompletionForEmployee(employee, task) > 70 ? 'text-green-600' : getTaskCompletionForEmployee(employee, task) > 40 ? 'text-yellow-600' : 'text-red-600'"
+                                                         x-text="getTaskCompletionForEmployee(employee, task) + '%'"></div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                    </div>
+                </template>
+
+                <!-- History Tab -->
+                <template x-if="isAdmin">
+                    <div x-show="activeTab === 'history'" 
+                         x-transition:enter="transition ease-out duration-300"
+                         x-transition:enter-start="opacity-0 transform translate-y-4"
+                         x-transition:enter-end="opacity-100 transform translate-y-0"
+                         class="space-y-6">
+
+                        <!-- History Controls -->
+                        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                                <i class="fas fa-history mr-2 text-primary-500"></i>Edit Riwayat Ceklis
+                            </h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Pegawai</label>
+                                    <select x-model="historyEmployee" 
+                                            @change="loadHistoryDates()"
+                                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                                        <option value="">-- Pilih Pegawai --</option>
+                                        <template x-for="employee in employees" :key="employee">
+                                            <option :value="employee" x-text="employee"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tanggal</label>
+                                    <input type="date" 
+                                           x-model="historyDate"
+                                           @change="loadHistoryChecklist()"
+                                           :max="getCurrentDate()"
+                                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                                </div>
+                                <div class="flex items-end">
+                                    <button @click="loadHistoryChecklist()" 
+                                            :disabled="!historyEmployee || !historyDate"
+                                            class="w-full px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <i class="fas fa-search mr-2"></i>Load Data
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- History Checklist -->
+                        <div x-show="historyChecklist.length > 0" 
+                             class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                            <div class="flex items-center justify-between mb-6">
+                                <h4 class="text-lg font-bold text-gray-900 dark:text-white">
+                                    Ceklis untuk <span x-text="historyEmployee"></span> - <span x-text="formatDate(historyDate)"></span>
+                                </h4>
+                                <button @click="saveHistoryChanges()" 
+                                        class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors">
+                                    <i class="fas fa-save mr-2"></i>Simpan Perubahan
+                                </button>
+                            </div>
+
+                            <div class="space-y-3">
+                                <template x-for="(task, index) in historyChecklist" :key="task.name">
+                                    <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                        <div class="flex items-center space-x-3">
+                                            <input type="checkbox" 
+                                                   :id="`history-task-${index}`"
+                                                   x-model="task.completed"
+                                                   class="w-5 h-5 text-primary-500 border-2 border-gray-300 dark:border-gray-600 rounded focus:ring-primary-500 focus:ring-2">
+                                            <label :for="`history-task-${index}`" 
+                                                   class="font-medium text-gray-900 dark:text-white cursor-pointer"
+                                                   x-text="task.name"></label>
+                                        </div>
+                                        <div class="text-sm text-gray-500 dark:text-gray-400">
+                                            <span x-show="task.completed" class="text-green-600">✓ Selesai</span>
+                                            <span x-show="!task.completed" class="text-red-600">✗ Belum</span>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- No Data State -->
+                        <div x-show="historyEmployee && historyDate && historyChecklist.length === 0" 
+                             class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-12 text-center">
+                            <div class="mx-auto w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
+                                <i class="fas fa-calendar-times text-2xl text-gray-400"></i>
+                            </div>
+                            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Tidak Ada Data</h3>
+                            <p class="text-gray-500 dark:text-gray-400">Tidak ada data ceklis untuk tanggal yang dipilih</p>
+                        </div>
+
+                    </div>
+                </template>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Auto-save indicator -->
+    <div x-show="autoSaving" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 transform translate-y-2"
+         x-transition:enter-end="opacity-100 transform translate-y-0"
+         class="fixed bottom-4 left-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg">
+        <i class="fas fa-sync-alt animate-spin mr-2"></i>
+        Menyimpan...
+    </div>
+
+    <!-- Auto-saved indicator -->
+    <div x-show="showSaved" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 transform translate-y-2"
+         x-transition:enter-end="opacity-100 transform translate-y-0"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 transform translate-y-0"
+         x-transition:leave-end="opacity-0 transform translate-y-2"
+         class="fixed bottom-4 left-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg">
+        <i class="fas fa-check mr-2"></i>
+        Tersimpan
+    </div>
+
+    <script>
+        function checklistApp() {
+            return {
+                // State variables
+                loading: true,
+                isLoggedIn: false,
+                isAdmin: false,
+                currentUser: '',
+                loginMode: 'user',
+                selectedEmployee: '',
+                adminCredentials: { username: '', password: '' },
+                showPassword: false,
+                isLoggingIn: false,
+                darkMode: false,
+                isOnline: navigator.onLine,
+                
+                // UI state
+                activeTab: 'daily',
+                loadingChecklist: false,
+                autoSaving: false,
+                showSaved: false,
+                notifications: [],
+                
+                // Data
+                employees: ['Kyai Abuhasanuddin', 'Ust. Agus Rohmawan', 'Charlie Brown', 'Diana Prince', 'Edward Norton', 'KH. Sukri Nursalim', 'Syafiq'],
+                defaultEmployees: ['Kyai Abuhasanuddin', 'Ust. Agus Rohmawan', 'Charlie Brown', 'Diana Prince', 'Edward Norton', 'KH. Sukri Nursalim', 'Syafiq'],
+                tasks: ['Cek Email', 'Update Laporan', 'Meeting Team', 'Review Dokumen', 'Backup Data', 'Qiyamul lail'],
+                defaultTasks: ['Cek Email', 'Update Laporan', 'Meeting Team', 'Review Dokumen', 'Backup Data', 'Qiyamul lail'],
+                dailyChecklist: {},
+                monthlyRecap: {},
+                historicalData: {},
+                
+                // Admin credentials
+                admins: [
+                    { username: 'admin', password: 'adminqu321' }
+                ],
+                
+                // Form data
+                newEmployee: '',
+                newTask: '',
+                selectedEmployeeForChecklist: '',
+                taskSearch: '',
+                
+                // Firebase
+                firebaseConfig: {
+                    apiKey: '',
+                    authDomain: '',
+                    databaseURL: '',
+                    projectId: ''
+                },
+                firebaseConnected: false,
+                connectingFirebase: false,
+                
+                // Analytics
+                selectedMonth: '',
+                availableMonths: [],
+                
+                // History
+                historyEmployee: '',
+                historyDate: '',
+                historyChecklist: [],
+                
+                // Time
+                currentTime: '',
+                
+                // Computed properties
+                get currentChecklist() {
+                    const user = this.isAdmin ? this.selectedEmployeeForChecklist : this.currentUser;
+                    if (!user || !this.dailyChecklist[user]) return [];
+                    return this.tasks;
+                },
+                
+                get filteredTasks() {
+                    if (!this.taskSearch) return this.currentChecklist;
+                    return this.currentChecklist.filter(task => 
+                        task.toLowerCase().includes(this.taskSearch.toLowerCase())
+                    );
+                },
+
+                // Initialize
+                async init() {
+                    this.loadFromStorage();
+                    this.setupTime();
+                    this.setupOnlineStatus();
+                    this.initializeData();
+                    this.generateAvailableMonths();
+                    
+                    // Simulate loading
+                    setTimeout(() => {
+                        this.loading = false;
+                    }, 2000);
+                    
+                    // Auto-save interval
+                    setInterval(() => {
+                        this.saveToStorage();
+                    }, 30000); // Save every 30 seconds
+                },
+                
+                setupTime() {
+                    this.updateCurrentTime();
+                    setInterval(() => {
+                        this.updateCurrentTime();
+                    }, 1000);
+                },
+                
+                updateCurrentTime() {
+                    const jakarta = this.getJakartaDate();
+                    this.currentTime = jakarta.toLocaleString('id-ID', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    });
+                },
+                
+                setupOnlineStatus() {
+                    window.addEventListener('online', () => {
+                        this.isOnline = true;
+                        this.showNotification('Koneksi internet tersambung', 'success');
+                    });
+                    
+                    window.addEventListener('offline', () => {
+                        this.isOnline = false;
+                        this.showNotification('Koneksi internet terputus', 'warning');
+                    });
+                },
+                
+                getJakartaDate() {
+                    const now = new Date();
+                    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+                    return new Date(utc + (7 * 3600000)); // UTC+7
+                },
+                
+                getCurrentDate() {
+                    const jakarta = this.getJakartaDate();
+                    return jakarta.toISOString().split('T')[0];
+                },
+                
+                getCurrentDateString() {
+                    const jakarta = this.getJakartaDate();
+                    return jakarta.toLocaleDateString('id-ID', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                },
+                
+                formatDate(dateString) {
+                    const date = new Date(dateString);
+                    return date.toLocaleDateString('id-ID', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                },
+                
+                // Authentication
+                async loginAsUser() {
+                    if (!this.selectedEmployee) {
+                        this.showNotification('Silakan pilih nama Anda', 'error');
+                        return;
+                    }
+                    
+                    this.isLoggingIn = true;
+                    
+                    // Simulate loading
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    
+                    this.currentUser = this.selectedEmployee;
+                    this.isAdmin = false;
+                    this.isLoggedIn = true;
+                    this.isLoggingIn = false;
+                    
+                    this.initializeUserData();
+                    this.showNotification(`Selamat datang, ${this.currentUser}!`, 'success');
+                },
+                
+                async loginAsAdmin() {
+                    if (!this.adminCredentials.username || !this.adminCredentials.password) {
+                        this.showNotification('Username dan password harus diisi', 'error');
+                        return;
+                    }
+                    
+                    const admin = this.admins.find(a => 
+                        a.username === this.adminCredentials.username && 
+                        a.password === this.adminCredentials.password
+                    );
+                    
+                    if (!admin) {
+                        this.showNotification('Username atau password salah', 'error');
+                        return;
+                    }
+                    
+                    this.isLoggingIn = true;
+                    
+                    // Simulate loading
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    
+                    this.currentUser = 'Administrator';
+                    this.isAdmin = true;
+                    this.isLoggedIn = true;
+                    this.isLoggingIn = false;
+                    
+                    this.showNotification('Login admin berhasil!', 'success');
+                },
+                
+                logout() {
+                    this.isLoggedIn = false;
+                    this.isAdmin = false;
+                    this.currentUser = '';
+                    this.selectedEmployee = '';
+                    this.adminCredentials = { username: '', password: '' };
+                    this.selectedEmployeeForChecklist = '';
+                    this.activeTab = 'daily';
+                    this.loginMode = 'user';
+                    
+                    this.showNotification('Anda telah logout', 'info');
+                },
+                
+                // Dark mode
+                toggleDarkMode() {
+                    this.darkMode = !this.darkMode;
+                    localStorage.setItem('darkMode', this.darkMode);
+                    
+                    if (this.darkMode) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                },
+                
+                // Data management
+                initializeData() {
+                    const today = this.getCurrentDate();
+                    
+                    // Initialize daily checklist for all employees
+                    this.employees.forEach(employee => {
+                        if (!this.dailyChecklist[employee]) {
+                            this.dailyChecklist[employee] = {};
+                        }
+                        this.tasks.forEach(task => {
+                            if (!(task in this.dailyChecklist[employee])) {
+                                this.dailyChecklist[employee][task] = {
+                                    completed: false,
+                                    timestamp: null
+                                };
+                            }
+                        });
+                    });
+                    
+                    // Check if it's a new day and reset if needed
+                    const lastResetDate = localStorage.getItem('lastResetDate');
+                    if (lastResetDate !== today) {
+                        this.resetDailyChecklist();
+                        localStorage.setItem('lastResetDate', today);
+                    }
+                },
+                
+                initializeUserData() {
+                    if (!this.dailyChecklist[this.currentUser]) {
+                        this.dailyChecklist[this.currentUser] = {};
+                    }
+                    
+                    this.tasks.forEach(task => {
+                        if (!(task in this.dailyChecklist[this.currentUser])) {
+                            this.dailyChecklist[this.currentUser][task] = {
+                                completed: false,
+                                timestamp: null
+                            };
+                        }
+                    });
+                },
+                
+                resetDailyChecklist() {
+                    // Save current day to historical data before reset
+                    const yesterday = new Date(this.getJakartaDate());
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    const yesterdayString = yesterday.toISOString().split('T')[0];
+                    
+                    this.historicalData[yesterdayString] = JSON.parse(JSON.stringify(this.dailyChecklist));
+                    
+                    // Reset daily checklist
+                    this.employees.forEach(employee => {
+                        if (this.dailyChecklist[employee]) {
+                            this.tasks.forEach(task => {
+                                this.dailyChecklist[employee][task] = {
+                                    completed: false,
+                                    timestamp: null
+                                };
+                            });
+                        }
+                    });
+                    
+                    this.showNotification('Ceklis harian telah direset', 'info');
+                },
+                
+                // Checklist operations
+                loadEmployeeChecklist() {
+                    if (!this.selectedEmployeeForChecklist) return;
+                    
+                    this.loadingChecklist = true;
+                    
+                    // Simulate loading
+                    setTimeout(() => {
+                        this.initializeUserData();
+                        this.loadingChecklist = false;
+                    }, 500);
+                },
+                
+                isTaskCompleted(task) {
+                    const user = this.isAdmin ? this.selectedEmployeeForChecklist : this.currentUser;
+                    if (!user || !this.dailyChecklist[user] || !this.dailyChecklist[user][task]) return false;
+                    return this.dailyChecklist[user][task].completed;
+                },
+                
+                getTaskTimestamp(task) {
+                    const user = this.isAdmin ? this.selectedEmployeeForChecklist : this.currentUser;
+                    if (!user || !this.dailyChecklist[user] || !this.dailyChecklist[user][task]) return '';
+                    
+                    const timestamp = this.dailyChecklist[user][task].timestamp;
+                    if (!timestamp) return '';
+                    
+                    return new Date(timestamp).toLocaleTimeString('id-ID', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                },
+                
+                async toggleTask(task, completed) {
+                    const user = this.isAdmin ? this.selectedEmployeeForChecklist : this.currentUser;
+                    if (!user) return;
+                    
+                    if (!this.dailyChecklist[user]) {
+                        this.dailyChecklist[user] = {};
+                    }
+                    
+                    if (!this.dailyChecklist[user][task]) {
+                        this.dailyChecklist[user][task] = {
+                            completed: false,
+                            timestamp: null
+                        };
+                    }
+                    
+                    this.dailyChecklist[user][task].completed = completed;
+                    this.dailyChecklist[user][task].timestamp = completed ? new Date().toISOString() : null;
+                    
+                    this.autoSave();
+                    
+                    this.showNotification(
+                        `${task} telah ${completed ? 'diselesaikan' : 'dibatalkan'}`,
+                        completed ? 'success' : 'info'
+                    );
+                },
+                
+                markAllTasks(completed) {
+                    if (!this.selectedEmployeeForChecklist) return;
+                    
+                    this.tasks.forEach(task => {
+                        this.toggleTask(task, completed);
+                    });
+                    
+                    this.showNotification(
+                        `Semua tugas telah ${completed ? 'diselesaikan' : 'direset'}`,
+                        completed ? 'success' : 'info'
+                    );
+                },
+                
+                getCompletionPercentage() {
+                    const user = this.isAdmin ? this.selectedEmployeeForChecklist : this.currentUser;
+                    if (!user || !this.dailyChecklist[user]) return 0;
+                    
+                    const completed = this.tasks.filter(task => 
+                        this.dailyChecklist[user][task] && this.dailyChecklist[user][task].completed
+                    ).length;
+                    
+                    return Math.round((completed / this.tasks.length) * 100);
+                },
+                
+                // Employee management
+                addEmployee() {
+                    const name = this.newEmployee.trim();
+                    if (!name) {
+                        this.showNotification('Nama pegawai tidak boleh kosong', 'error');
+                        return;
+                    }
+                    
+                    if (this.employees.includes(name)) {
+                        this.showNotification('Pegawai dengan nama tersebut sudah ada', 'error');
+                        return;
+                    }
+                    
+                    this.employees.push(name);
+                    this.employees.sort();
+                    
+                    // Initialize checklist for new employee
+                    this.dailyChecklist[name] = {};
+                    this.tasks.forEach(task => {
+                        this.dailyChecklist[name][task] = {
+                            completed: false,
+                            timestamp: null
+                        };
+                    });
+                    
+                    this.newEmployee = '';
+                    this.autoSave();
+                    this.showNotification(`Pegawai ${name} berhasil ditambahkan`, 'success');
+                },
+                
+                removeEmployee(name) {
+                    if (!confirm(`Hapus pegawai ${name}? Data terkait akan terhapus.`)) return;
+                    
+                    this.employees = this.employees.filter(emp => emp !== name);
+                    delete this.dailyChecklist[name];
+                    
+                    // Clear selection if removed employee was selected
+                    if (this.selectedEmployeeForChecklist === name) {
+                        this.selectedEmployeeForChecklist = '';
+                    }
+                    
+                    this.autoSave();
+                    this.showNotification(`Pegawai ${name} berhasil dihapus`, 'success');
+                },
+                
+                // Task management
+                addTask() {
+                    const name = this.newTask.trim();
+                    if (!name) {
+                        this.showNotification('Nama tugas tidak boleh kosong', 'error');
+                        return;
+                    }
+                    
+                    if (this.tasks.includes(name)) {
+                        this.showNotification('Tugas dengan nama tersebut sudah ada', 'error');
+                        return;
+                    }
+                    
+                    this.tasks.push(name);
+                    
+                    // Add task to all employees' checklists
+                    this.employees.forEach(employee => {
+                        if (!this.dailyChecklist[employee]) {
+                            this.dailyChecklist[employee] = {};
+                        }
+                        this.dailyChecklist[employee][name] = {
+                            completed: false,
+                            timestamp: null
+                        };
+                    });
+                    
+                    this.newTask = '';
+                    this.autoSave();
+                    this.showNotification(`Tugas ${name} berhasil ditambahkan`, 'success');
+                },
+                
+                removeTask(name) {
+                    if (!confirm(`Hapus tugas ${name}? Data terkait akan terhapus.`)) return;
+                    
+                    this.tasks = this.tasks.filter(task => task !== name);
+                    
+                    // Remove task from all employees' checklists
+                    this.employees.forEach(employee => {
+                        if (this.dailyChecklist[employee]) {
+                            delete this.dailyChecklist[employee][name];
+                        }
+                    });
+                    
+                    this.autoSave();
+                    this.showNotification(`Tugas ${name} berhasil dihapus`, 'success');
+                },
+                
+                // Analytics
+                generateAvailableMonths() {
+                    const months = [];
+                    const now = new Date();
+                    
+                    for (let i = 11; i >= 0; i--) {
+                        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                        const value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                        const label = date.toLocaleDateString('id-ID', { year: 'numeric', month: 'long' });
+                        months.push({ value, label });
+                    }
+                    
+                    this.availableMonths = months;
+                    this.selectedMonth = months[months.length - 1].value; // Current month
+                },
+                
+                loadAnalytics() {
+                    // This would load analytics data for the selected month
+                    this.showNotification('Data analytics dimuat', 'info');
+                },
+                
+                getAverageCompletion() {
+                    if (this.employees.length === 0) return 0;
+                    
+                    let total = 0;
+                    this.employees.forEach(employee => {
+                        total += this.getEmployeeCompletion(employee);
+                    });
+                    
+                    return Math.round(total / this.employees.length);
+                },
+                
+                getEmployeeCompletion(employee) {
+                    if (!this.dailyChecklist[employee]) return 0;
+                    
+                    const completed = this.tasks.filter(task => 
+                        this.dailyChecklist[employee][task] && this.dailyChecklist[employee][task].completed
+                    ).length;
+                    
+                    return Math.round((completed / this.tasks.length) * 100);
+                },
+                
+                getTaskCompletionForEmployee(employee, task) {
+                    // This would calculate historical completion rate for a specific task
+                    // For now, return a random percentage for demo
+                    return Math.floor(Math.random() * 100);
+                },
+                
+                getTopPerformer() {
+                    if (this.employees.length === 0) return 'N/A';
+                    
+                    let topEmployee = this.employees[0];
+                    let maxCompletion = this.getEmployeeCompletion(topEmployee);
+                    
+                    this.employees.forEach(employee => {
+                        const completion = this.getEmployeeCompletion(employee);
+                        if (completion > maxCompletion) {
+                            maxCompletion = completion;
+                            topEmployee = employee;
+                        }
+                    });
+                    
+                    return topEmployee;
+                },
+                
+                // History management
+                loadHistoryDates() {
+                    if (!this.historyEmployee) {
+                        this.historyDate = '';
+                        this.historyChecklist = [];
+                        return;
+                    }
+                    
+                    // Set default to today
+                    this.historyDate = this.getCurrentDate();
+                },
+                
+                loadHistoryChecklist() {
+                    if (!this.historyEmployee || !this.historyDate) {
+                        this.historyChecklist = [];
+                        return;
+                    }
+                    
+                    // Load historical data for the selected date
+                    const dateData = this.historicalData[this.historyDate];
+                    const employeeData = dateData && dateData[this.historyEmployee];
+                    
+                    this.historyChecklist = this.tasks.map(task => ({
+                        name: task,
+                        completed: employeeData && employeeData[task] ? employeeData[task].completed : false
+                    }));
+                },
+                
+                saveHistoryChanges() {
+                    if (!this.historyEmployee || !this.historyDate) return;
+                    
+                    // Initialize historical data structure if needed
+                    if (!this.historicalData[this.historyDate]) {
+                        this.historicalData[this.historyDate] = {};
+                    }
+                    
+                    if (!this.historicalData[this.historyDate][this.historyEmployee]) {
+                        this.historicalData[this.historyDate][this.historyEmployee] = {};
+                    }
+                    
+                    // Save changes
+                    this.historyChecklist.forEach(task => {
+                        this.historicalData[this.historyDate][this.historyEmployee][task.name] = {
+                            completed: task.completed,
+                            timestamp: task.completed ? new Date().toISOString() : null
+                        };
+                    });
+                    
+                    this.autoSave();
+                    this.showNotification('Perubahan riwayat berhasil disimpan', 'success');
+                },
+                
+                // Firebase operations
+                connectFirebase() {
+                    if (!this.firebaseConfig.apiKey || !this.firebaseConfig.projectId) {
+                        this.showNotification('API Key dan Project ID harus diisi', 'error');
+                        return;
+                    }
+                    
+                    this.connectingFirebase = true;
+                    
+                    // Simulate connection
+                    setTimeout(() => {
+                        this.firebaseConnected = true;
+                        this.connectingFirebase = false;
+                        this.showNotification('Berhasil terhubung ke Firebase', 'success');
+                    }, 2000);
+                },
+                
+                disconnectFirebase() {
+                    this.firebaseConnected = false;
+                    this.showNotification('Koneksi Firebase terputus', 'info');
+                },
+                
+                // Data operations
+                exportData(format) {
+                    const data = {
+                        employees: this.employees,
+                        tasks: this.tasks,
+                        dailyChecklist: this.dailyChecklist,
+                        historicalData: this.historicalData,
+                        exportDate: new Date().toISOString()
+                    };
+                    
+                    if (format === 'json') {
+                        this.downloadJSON(data, 'checklist-data.json');
+                    } else if (format === 'csv') {
+                        this.downloadCSV(data, 'checklist-data.csv');
+                    }
+                    
+                    this.showNotification(`Data berhasil diekspor sebagai ${format.toUpperCase()}`, 'success');
+                },
+                
+                downloadJSON(data, filename) {
+                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                },
+                
+                downloadCSV(data, filename) {
+                    // Create CSV content
+                    let csv = 'Employee,Task,Completed,Date\n';
+                    
+                    Object.keys(data.dailyChecklist).forEach(employee => {
+                        Object.keys(data.dailyChecklist[employee]).forEach(task => {
+                            const taskData = data.dailyChecklist[employee][task];
+                            csv += `${employee},${task},${taskData.completed ? 'Yes' : 'No'},${this.getCurrentDate()}\n`;
+                        });
+                    });
+                    
+                    const blob = new Blob([csv], { type: 'text/csv' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                },
+                
+                printReport() {
+                    window.print();
+                    this.showNotification('Membuka dialog print...', 'info');
+                },
+                
+                // Storage operations
+                loadFromStorage() {
+                    try {
+                        const saved = localStorage.getItem('checklistData');
+                        if (saved) {
+                            const data = JSON.parse(saved);
+                            this.employees = data.employees || this.employees;
+                            this.tasks = data.tasks || this.tasks;
+                            this.dailyChecklist = data.dailyChecklist || this.dailyChecklist;
+                            this.historicalData = data.historicalData || this.historicalData;
+                        }
+                        
+                        const darkMode = localStorage.getItem('darkMode');
+                        if (darkMode !== null) {
+                            this.darkMode = darkMode === 'true';
+                            if (this.darkMode) {
+                                document.documentElement.classList.add('dark');
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error loading from storage:', error);
+                    }
+                },
+                
+                saveToStorage() {
+                    try {
+                        const data = {
+                            employees: this.employees,
+                            tasks: this.tasks,
+                            dailyChecklist: this.dailyChecklist,
+                            historicalData: this.historicalData,
+                            lastSaved: new Date().toISOString()
+                        };
+                        localStorage.setItem('checklistData', JSON.stringify(data));
+                    } catch (error) {
+                        console.error('Error saving to storage:', error);
+                    }
+                },
+                
+                async autoSave() {
+                    this.autoSaving = true;
+                    
+                    // Save to local storage
+                    this.saveToStorage();
+                    
+                    // Simulate network save
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    
+                    this.autoSaving = false;
+                    this.showSaved = true;
+                    
+                    setTimeout(() => {
+                        this.showSaved = false;
+                    }, 2000);
+                },
+                
+                // Notifications
+                showNotification(message, type = 'info') {
+                    const id = Date.now();
+                    const notification = {
+                        id,
+                        message,
+                        type,
+                        show: true
+                    };
+                    
+                    this.notifications.push(notification);
+                    
+                    // Auto remove after 5 seconds
+                    setTimeout(() => {
+                        this.removeNotification(id);
+                    }, 5000);
+                },
+                
+                removeNotification(id) {
+                    const index = this.notifications.findIndex(n => n.id === id);
+                    if (index > -1) {
+                        this.notifications[index].show = false;
+                        setTimeout(() => {
+                            this.notifications.splice(index, 1);
+                        }, 300);
+                    }
+                }
+            };
+        }
+    </script>
+</body>
+</html>
