@@ -169,6 +169,52 @@
                 display: none !important;
             }
         }
+
+        /* Monthly report styles */
+        .monthly-report-grid {
+            overflow-x: auto;
+            min-width: 100%;
+        }
+
+        .monthly-report-table {
+            min-width: 800px;
+        }
+
+        .task-cell {
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .employee-name-cell {
+            min-width: 150px;
+            position: sticky;
+            left: 0;
+            background: inherit;
+            z-index: 10;
+        }
+
+        .dark .employee-name-cell {
+            background: #2d3748 !important;
+        }
+
+        .heat-map-cell {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .heat-map-0 { background-color: #f3f4f6; }
+        .heat-map-1 { background-color: #dcfce7; }
+        .heat-map-2 { background-color: #bbf7d0; }
+        .heat-map-3 { background-color: #86efac; }
+        .heat-map-4 { background-color: #4ade80; }
+        .heat-map-5 { background-color: #22c55e; }
+
+        .dark .heat-map-0 { background-color: #374151; }
+        .dark .heat-map-1 { background-color: #064e3b; }
+        .dark .heat-map-2 { background-color: #065f46; }
+        .dark .heat-map-3 { background-color: #047857; }
+        .dark .heat-map-4 { background-color: #059669; }
+        .dark .heat-map-5 { background-color: #10b981; }
     </style>
 
     <script>
@@ -212,7 +258,7 @@
         <div class="text-center text-white">
             <div class="animate-spin rounded-full h-16 w-16 border-4 border-white border-t-transparent mb-4 mx-auto"></div>
             <h2 class="text-2xl font-bold mb-2">Amal Yaumi Ibnu Katsir</h2>
-            <p class="text-lg opacity-90">Memuat aplikasi...</p>
+            <p class="text-lg opacity-90">Bismillahirrahmanirrahim</p>
         </div>
     </div>
 
@@ -226,124 +272,6 @@
          x-show="connectionStatus !== 'online'">
         <span x-show="connectionStatus === 'connecting'">🔄 Connecting to Supabase...</span>
         <span x-show="connectionStatus === 'offline'">❌ Offline Mode</span>
-    </div>
-
-    <!-- Supabase Setup Modal -->
-    <div x-show="showSupabaseSetup" 
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0"
-         class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 p-4">
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 md:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div class="text-center mb-6">
-                <h2 class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-4">🔧 Setup Supabase</h2>
-                <div class="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 p-4 rounded-lg mb-6 text-left">
-                    <h3 class="font-semibold text-blue-800 dark:text-blue-200 mb-2">📋 Langkah Setup:</h3>
-                    <ol class="list-decimal list-inside space-y-1 text-sm text-blue-700 dark:text-blue-300">
-                        <li>Buat project di <strong>supabase.com</strong></li>
-                        <li>Jalankan SQL script untuk membuat tabel</li>
-                        <li>Dapatkan URL dan ANON KEY dari Settings → API</li>
-                        <li>Masukkan credentials di bawah ini</li>
-                    </ol>
-                </div>
-                
-                <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg mb-6 text-left">
-                    <h4 class="font-semibold text-gray-800 dark:text-white mb-2">📝 SQL Script untuk Supabase:</h4>
-                    <pre class="text-xs bg-gray-800 text-green-400 p-3 rounded overflow-x-auto"><code>-- Tabel employees
-CREATE TABLE employees (
-  id SERIAL PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
-  is_default BOOLEAN DEFAULT false,
-  created_at TIMESTAMP DEFAULT NOW()
-);
-
--- Tabel tasks  
-CREATE TABLE tasks (
-  id SERIAL PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
-  is_default BOOLEAN DEFAULT false,
-  created_at TIMESTAMP DEFAULT NOW()
-);
-
--- Tabel daily_checklist
-CREATE TABLE daily_checklist (
-  id SERIAL PRIMARY KEY,
-  employee_id INTEGER REFERENCES employees(id),
-  task_id INTEGER REFERENCES tasks(id),
-  completed BOOLEAN DEFAULT false,
-  check_date DATE DEFAULT CURRENT_DATE,
-  timestamp TIMESTAMP,
-  created_at TIMESTAMP DEFAULT NOW(),
-  UNIQUE(employee_id, task_id, check_date)
-);
-
--- Insert default data
-INSERT INTO employees (name, is_default) VALUES
-('Kyai Abuhasanuddin', true),
-('Ust. Agus Rohmawan', true),
-('KH. Sukri Nursalim', true),
-('Ust. H. Hari Setiawan', true),
-('Ust. Taufiq', true),
-('Ust. Abdullah', true),
-('Syafiq', true);
-
-INSERT INTO tasks (name, is_default) VALUES
-('Qiyamul lail', true),
-('Shubuh berjamaah (ikhwan)', true),
-('Sedekah (utamakan shubuh)', true),
-('Dhuha', true),
-('Istighfar & sholawat', true),
-('Doa untuk Ibnu Katsir', true);
-
--- Enable RLS (Row Level Security)
-ALTER TABLE employees ENABLE ROW LEVEL SECURITY;
-ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
-ALTER TABLE daily_checklist ENABLE ROW LEVEL SECURITY;
-
--- Allow all operations (untuk demo)
-CREATE POLICY "Allow all" ON employees FOR ALL USING (true);
-CREATE POLICY "Allow all" ON tasks FOR ALL USING (true);
-CREATE POLICY "Allow all" ON daily_checklist FOR ALL USING (true);</code></pre>
-                </div>
-                
-                <!-- Credentials Input -->
-                <div class="space-y-4 mb-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Supabase URL</label>
-                        <input type="text" 
-                               x-model="supabaseSetup.url"
-                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-                               placeholder="https://your-project-id.supabase.co">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Anon Key</label>
-                        <textarea x-model="supabaseSetup.anonKey"
-                                  rows="3"
-                                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-                                  placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."></textarea>
-                    </div>
-                </div>
-                
-                <div class="flex space-x-4">
-                    <button @click="continueOffline()" 
-                            class="flex-1 py-3 px-6 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all">
-                        📱 Continue Offline
-                    </button>
-                    <button @click="connectSupabase()" 
-                            :disabled="!supabaseSetup.url || !supabaseSetup.anonKey || connectingSupabase"
-                            class="flex-1 py-3 px-6 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                        <span x-show="!connectingSupabase">🔗 Connect Supabase</span>
-                        <span x-show="connectingSupabase" class="flex items-center justify-center">
-                            <div class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                            Connecting...
-                        </span>
-                    </button>
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- Toast Notifications -->
@@ -574,11 +502,11 @@ CREATE POLICY "Allow all" ON daily_checklist FOR ALL USING (true);</code></pre>
                     </template>
 
                     <template x-if="isAdmin">
-                        <button @click="activeTab = 'analytics'" 
+                        <button @click="activeTab = 'analytics'; loadMonthlyReport()" 
                                 :class="activeTab === 'analytics' ? 'bg-primary-500 text-white shadow-md' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
                                 class="px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2">
                             <i class="fas fa-chart-bar"></i>
-                            <span>Analytics</span>
+                            <span>Analytics Bulanan</span>
                         </button>
                     </template>
                 </nav>
@@ -784,14 +712,20 @@ CREATE POLICY "Allow all" ON daily_checklist FOR ALL USING (true);</code></pre>
                                         <div :class="supabaseConnected ? 'bg-green-400' : 'bg-red-400'" class="w-3 h-3 rounded-full"></div>
                                         <span class="font-medium" x-text="supabaseConnected ? 'Terhubung ke Supabase' : 'Mode Offline'"></span>
                                     </div>
-                                    <button @click="showSupabaseSetup = true" 
-                                            class="px-3 py-1 bg-white/20 border border-white/30 rounded text-sm hover:bg-white/30 transition-colors">
-                                        <i class="fas fa-cog mr-1"></i>Setup
-                                    </button>
                                 </div>
                                 <div class="text-sm opacity-90 mt-2">
                                     <span x-show="supabaseConnected">Real-time sync aktif</span>
                                     <span x-show="!supabaseConnected">Data tersimpan lokal saja</span>
+                                </div>
+                            </div>
+
+                            <!-- Data Management Info -->
+                            <div class="bg-white/10 backdrop-blur-sm rounded-lg p-4 mt-4">
+                                <h4 class="font-semibold mb-2">📋 Cara Mengelola Data Pegawai:</h4>
+                                <div class="text-sm space-y-1">
+                                    <p><strong>1. Melalui Interface:</strong> Gunakan form "Kelola Peserta" di bawah untuk menambah/hapus</p>
+                                    <p><strong>2. Melalui Supabase SQL Editor:</strong> Edit langsung di tabel <code class="bg-white/20 px-1 rounded">employees</code></p>
+                                    <p><strong>3. Sync Otomatis:</strong> Perubahan di Supabase akan muncul setelah refresh halaman</p>
                                 </div>
                             </div>
                         </div>
@@ -914,1020 +848,1438 @@ CREATE POLICY "Allow all" ON daily_checklist FOR ALL USING (true);</code></pre>
                          x-transition:enter-end="opacity-100 transform translate-y-0"
                          class="space-y-6">
 
-                        <!-- Summary Cards -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <p class="text-blue-100 text-sm font-medium">Total Peserta</p>
-                                        <p class="text-3xl font-bold" x-text="employees.length"></p>
+                        <!-- Month Selector -->
+                        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                                <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+                                    <i class="fas fa-chart-line mr-2 text-primary-500"></i>Analytics Bulanan
+                                </h3>
+                                
+                                <div class="flex flex-wrap items-center gap-3">
+                                    <div class="flex items-center space-x-2">
+                                        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Pilih Bulan:</label>
+                                        <select x-model="selectedMonth" 
+                                                class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
+                                            <template x-for="month in availableMonths" :key="month.value">
+                                                <option :value="month.value" x-text="month.label"></option>
+                                            </template>
+                                        </select>
                                     </div>
-                                    <div class="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                                        <i class="fas fa-users text-xl"></i>
-                                    </div>
+                                    
+                                    <button @click="loadMonthlyReport()" 
+                                            :disabled="loadingMonthlyReport"
+                                            class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center space-x-2">
+                                        <i :class="loadingMonthlyReport ? 'fas fa-spinner animate-spin' : 'fas fa-sync-alt'"></i>
+                                        <span>Refresh</span>
+                                    </button>
+                                    
+                                    <button @click="exportMonthlyReport()" 
+                                            :disabled="!monthlyData || monthlyData.length === 0"
+                                            class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center space-x-2">
+                                        <i class="fas fa-file-excel"></i>
+                                        <span>Export</span>
+                                    </button>
                                 </div>
                             </div>
 
-                            <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <p class="text-green-100 text-sm font-medium">Total Tugas</p>
-                                        <p class="text-3xl font-bold" x-text="tasks.length"></p>
-                                    </div>
-                                    <div class="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                                        <i class="fas fa-tasks text-xl"></i>
-                                    </div>
+                            <!-- Monthly Summary Cards -->
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                                <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 text-white">
+                                    <div class="text-sm opacity-90">Total Checklist</div>
+                                    <div class="text-2xl font-bold" x-text="monthlyStats.totalChecklist"></div>
                                 </div>
-                            </div>
-
-                            <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl shadow-lg p-6 text-white">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <p class="text-yellow-100 text-sm font-medium">Rata-rata Hari Ini</p>
-                                        <p class="text-3xl font-bold" x-text="getAverageCompletion() + '%'"></p>
-                                    </div>
-                                    <div class="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                                        <i class="fas fa-percentage text-xl"></i>
-                                    </div>
+                                <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-4 text-white">
+                                    <div class="text-sm opacity-90">Completed</div>
+                                    <div class="text-2xl font-bold" x-text="monthlyStats.totalCompleted"></div>
                                 </div>
-                            </div>
-
-                            <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <p class="text-purple-100 text-sm font-medium">Top Performer</p>
-                                        <p class="text-lg font-bold" x-text="getTopPerformer()"></p>
-                                    </div>
-                                    <div class="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                                        <i class="fas fa-trophy text-xl"></i>
-                                    </div>
+                                <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-lg p-4 text-white">
+                                    <div class="text-sm opacity-90">Completion Rate</div>
+                                    <div class="text-2xl font-bold" x-text="monthlyStats.completionRate + '%'"></div>
+                                </div>
+                                <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-4 text-white">
+                                    <div class="text-sm opacity-90">Peserta Aktif</div>
+                                    <div class="text-2xl font-bold" x-text="monthlyStats.activeEmployees"></div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Performance per Employee -->
-                        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-                            <h4 class="text-lg font-bold text-gray-900 dark:text-white mb-6">
-                                <i class="fas fa-chart-bar mr-2 text-primary-500"></i>Performance Hari Ini
-                            </h4>
+                        <!-- Loading State -->
+                        <div x-show="loadingMonthlyReport" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                            <div class="flex items-center justify-center py-12">
+                                <div class="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent mr-4"></div>
+                                <span class="text-lg text-gray-600 dark:text-gray-400">Memuat data bulanan...</span>
+                            </div>
+                        </div>
+
+                        <!-- Task Performance Analysis -->
+                        <div x-show="!loadingMonthlyReport && monthlyTaskStats && monthlyTaskStats.length > 0" 
+                             class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                             
-                            <div class="space-y-4">
-                                <template x-for="employee in employees" :key="employee.id">
-                                    <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <div class="mb-6">
+                                <h4 class="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                                    <i class="fas fa-tasks mr-2 text-primary-500"></i>Analisis Performance Tugas - <span x-text="getSelectedMonthLabel()"></span>
+                                </h4>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">
+                                    Ranking tugas berdasarkan tingkat completion rate. Tugas dengan persentase rendah memerlukan perhatian lebih.
+                                </p>
+                            </div>
+
+                            <!-- Task Performance Cards -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                                <template x-for="(taskStat, index) in monthlyTaskStats" :key="taskStat.task_id">
+                                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border-l-4"
+                                         :class="{
+                                             'border-green-500 bg-green-50 dark:bg-green-900/20': taskStat.completion_rate >= 80,
+                                             'border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20': taskStat.completion_rate >= 50 && taskStat.completion_rate < 80,
+                                             'border-red-500 bg-red-50 dark:bg-red-900/20': taskStat.completion_rate < 50
+                                         }">
+                                        
                                         <div class="flex items-center justify-between mb-3">
-                                            <h5 class="font-semibold text-gray-900 dark:text-white" x-text="employee.name"></h5>
-                                            <span class="text-sm font-medium text-primary-500" 
-                                                  x-text="getEmployeeCompletion(employee.id) + '%'"></span>
+                                            <div class="flex items-center space-x-2">
+                                                <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white"
+                                                     :class="{
+                                                         'bg-green-500': taskStat.completion_rate >= 80,
+                                                         'bg-yellow-500': taskStat.completion_rate >= 50 && taskStat.completion_rate < 80,
+                                                         'bg-red-500': taskStat.completion_rate < 50
+                                                     }"
+                                                     x-text="index + 1">
+                                                </div>
+                                                <div>
+                                                    <h5 class="font-semibold text-gray-900 dark:text-white text-sm" x-text="taskStat.task_name"></h5>
+                                                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                                                        <span x-text="taskStat.completed_count"></span> dari <span x-text="taskStat.total_possible"></span> kemungkinan
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="text-right">
+                                                <div class="text-lg font-bold"
+                                                     :class="{
+                                                         'text-green-600': taskStat.completion_rate >= 80,
+                                                         'text-yellow-600': taskStat.completion_rate >= 50 && taskStat.completion_rate < 80,
+                                                         'text-red-600': taskStat.completion_rate < 50
+                                                     }"
+                                                     x-text="taskStat.completion_rate + '%'">
+                                                </div>
+                                                <div class="text-xs text-gray-500 dark:text-gray-400"
+                                                     x-text="getTaskPerformanceLabel(taskStat.completion_rate)">
+                                                </div>
+                                            </div>
                                         </div>
                                         
-                                        <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-3 mb-4">
-                                            <div class="bg-gradient-to-r from-primary-500 to-orange-400 h-3 rounded-full transition-all duration-500"
-                                                 :style="`width: ${getEmployeeCompletion(employee.id)}%`"></div>
-                                        </div>
-
-                                        <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
-                                            <template x-for="task in tasks" :key="task.id">
-                                                <div class="text-center p-2 bg-white dark:bg-gray-800 rounded"
-                                                     :class="isTaskCompletedByEmployee(employee.id, task.id) ? 'text-green-600' : 'text-gray-400'">
-                                                    <i :class="isTaskCompletedByEmployee(employee.id, task.id) ? 'fas fa-check-circle' : 'far fa-circle'" class="mb-1"></i>
-                                                    <div x-text="task.name"></div>
-                                                </div>
-                                            </template>
+                                        <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-3">
+                                            <div class="h-3 rounded-full transition-all duration-500"
+                                                 :class="{
+                                                     'bg-gradient-to-r from-green-400 to-green-500': taskStat.completion_rate >= 80,
+                                                     'bg-gradient-to-r from-yellow-400 to-yellow-500': taskStat.completion_rate >= 50 && taskStat.completion_rate < 80,
+                                                     'bg-gradient-to-r from-red-400 to-red-500': taskStat.completion_rate < 50
+                                                 }"
+                                                 :style="`width: ${taskStat.completion_rate}%`">
+                                            </div>
                                         </div>
                                     </div>
                                 </template>
                             </div>
+
+                            <!-- Task Performance Summary -->
+                            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                                <h5 class="font-semibold text-gray-900 dark:text-white mb-3">📊 Ringkasan Performance:</h5>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                                        <span class="text-gray-700 dark:text-gray-300">
+                                            Alhamdulillah (≥80%): <strong x-text="getTasksByPerformance('excellent').length"></strong> tugas
+                                        </span>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                                        <span class="text-gray-700 dark:text-gray-300">
+                                            Baik (50-79%): <strong x-text="getTasksByPerformance('good').length"></strong> tugas
+                                        </span>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                                        <span class="text-gray-700 dark:text-gray-300">
+                                            Butuh dimotivasi (<50%): <strong x-text="getTasksByPerformance('poor').length"></strong> tugas
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                    </div>
-                </template>
-
-            </div>
-        </div>
-    </div>
-
-    <!-- Auto-save indicator -->
-    <div x-show="autoSaving" 
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0 transform translate-y-2"
-         x-transition:enter-end="opacity-100 transform translate-y-0"
-         class="fixed bottom-4 left-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg">
-        <i class="fas fa-sync-alt animate-spin mr-2"></i>
-        Menyimpan...
-    </div>
-
-    <!-- Auto-saved indicator -->
-    <div x-show="showSaved" 
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0 transform translate-y-2"
-         x-transition:enter-end="opacity-100 transform translate-y-0"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100 transform translate-y-0"
-         x-transition:leave-end="opacity-0 transform translate-y-2"
-         class="fixed bottom-4 left-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg">
-        <i class="fas fa-check mr-2"></i>
-        Tersimpan
-    </div>
-
-    <script>
-        function checklistApp() {
-            return {
-                // State variables
-                loading: true,
-                isLoggedIn: false,
-                isAdmin: false,
-                currentUser: '',
-                currentUserId: null,
-                loginMode: 'user',
-                selectedEmployee: '',
-                adminCredentials: { username: '', password: '' },
-                showPassword: false,
-                isLoggingIn: false,
-                darkMode: false,
-                
-                // UI state
-                activeTab: 'daily',
-                loadingChecklist: false,
-                autoSaving: false,
-                showSaved: false,
-                notifications: [],
-                
-                // Supabase
-                supabaseConnected: false,
-                connectionStatus: 'connecting',
-                connectingSupabase: false,
-                showSupabaseSetup: false,
-                supabaseSetup: {
-                    url: '',
-                    anonKey: ''
-                },
-                
-                // Data
-                employees: [],
-                tasks: [],
-                dailyChecklist: {},
-                
-                // Admin credentials
-                admins: [
-                    { username: 'admin', password: 'adminqu321' }
-                ],
-                
-                // Form data
-                newEmployee: '',
-                newTask: '',
-                selectedEmployeeForChecklist: '',
-                taskSearch: '',
-                
-                // Time
-                currentTime: '',
-                
-                // Computed properties
-                get currentChecklist() {
-                    if (this.isAdmin && this.selectedEmployeeForChecklist) {
-                        return this.tasks;
-                    } else if (!this.isAdmin && this.currentUserId) {
-                        return this.tasks;
-                    }
-                    return [];
-                },
-                
-                get filteredTasks() {
-                    if (!this.taskSearch) return this.currentChecklist;
-                    return this.currentChecklist.filter(task => 
-                        task.name.toLowerCase().includes(this.taskSearch.toLowerCase())
-                    );
-                },
-
-                // Initialize
-                async init() {
-                    this.loadFromStorage();
-                    this.setupTime();
-                    
-                    // Check Supabase connection
-                    await this.checkSupabaseConnection();
-                    
-                    // Load data
-                    await this.loadData();
-                    
-                    // Simulate loading
-                    setTimeout(() => {
-                        this.loading = false;
-                    }, 2000);
-                    
-                    // Auto-save interval
-                    setInterval(() => {
-                        this.saveToStorage();
-                    }, 30000);
-                },
-
-                async checkSupabaseConnection() {
-                    try {
-                        // Check if credentials look valid
-                        if (!SUPABASE_URL.includes('supabase.co') || !SUPABASE_ANON_KEY.startsWith('eyJ')) {
-                            throw new Error('Invalid credentials');
-                        }
-
-                        // Test connection
-                        const { data, error } = await window.supabaseClient
-                            .from('employees')
-                            .select('count')
-                            .limit(1);
-
-                        if (error) throw error;
-
-                        this.supabaseConnected = true;
-                        this.connectionStatus = 'online';
-                        console.log('✅ Supabase connected successfully');
-
-                    } catch (error) {
-                        console.error('Supabase connection failed:', error);
-                        this.supabaseConnected = false;
-                        this.connectionStatus = 'offline';
-                        
-                        // Show setup modal if credentials are invalid
-                        if (error.message.includes('Invalid credentials') || error.message.includes('your-project-id')) {
-                            this.showSupabaseSetup = true;
-                        }
-                    }
-                },
-
-                async connectSupabase() {
-                    if (!this.supabaseSetup.url || !this.supabaseSetup.anonKey) {
-                        this.showNotification('URL dan Anon Key harus diisi', 'error');
-                        return;
-                    }
-
-                    this.connectingSupabase = true;
-
-                    try {
-                        // Create new Supabase client with provided credentials
-                        const newClient = window.supabase.createClient(
-                            this.supabaseSetup.url,
-                            this.supabaseSetup.anonKey
-                        );
-
-                        // Test connection
-                        const { data, error } = await newClient
-                            .from('employees')
-                            .select('count')
-                            .limit(1);
-
-                        if (error) throw error;
-
-                        // Update global client
-                        window.supabaseClient = newClient;
-                        
-                        this.supabaseConnected = true;
-                        this.connectionStatus = 'online';
-                        this.showSupabaseSetup = false;
-                        this.connectingSupabase = false;
-
-                        // Save credentials to localStorage
-                        localStorage.setItem('supabaseCredentials', JSON.stringify({
-                            url: this.supabaseSetup.url,
-                            anonKey: this.supabaseSetup.anonKey
-                        }));
-
-                        this.showNotification('Berhasil terhubung ke Supabase!', 'success');
-                        
-                        // Reload data from Supabase
-                        await this.loadData();
-
-                    } catch (error) {
-                        console.error('Supabase connection failed:', error);
-                        this.showNotification('Gagal terhubung ke Supabase: ' + error.message, 'error');
-                        this.connectingSupabase = false;
-                    }
-                },
-
-                continueOffline() {
-                    this.showSupabaseSetup = false;
-                    this.supabaseConnected = false;
-                    this.connectionStatus = 'offline';
-                    this.showNotification('Melanjutkan dalam mode offline', 'info');
-                },
-
-                async loadData() {
-                    if (this.supabaseConnected) {
-                        await this.loadFromSupabase();
-                    } else {
-                        this.loadFromLocalStorage();
-                    }
-                },
-
-                async loadFromSupabase() {
-                    try {
-                        // Load employees
-                        const { data: employees, error: empError } = await window.supabaseClient
-                            .from('employees')
-                            .select('*')
-                            .order('id');
-
-                        if (empError) throw empError;
-                        this.employees = employees || [];
-
-                        // Load tasks
-                        const { data: tasks, error: taskError } = await window.supabaseClient
-                            .from('tasks')
-                            .select('*')
-                            .order('id');
-
-                        if (taskError) throw taskError;
-                        this.tasks = tasks || [];
-
-                        // Load today's checklist
-                        const today = this.getCurrentDate();
-                        const { data: checklist, error: checkError } = await window.supabaseClient
-                            .from('daily_checklist')
-                            .select('*')
-                            .eq('check_date', today);
-
-                        if (checkError) throw checkError;
-
-                        // Process checklist data
-                        this.dailyChecklist = {};
-                        if (checklist) {
-                            checklist.forEach(item => {
-                                if (!this.dailyChecklist[item.employee_id]) {
-                                    this.dailyChecklist[item.employee_id] = {};
-                                }
-                                this.dailyChecklist[item.employee_id][item.task_id] = {
-                                    completed: item.completed,
-                                    timestamp: item.timestamp
-                                };
-                            });
-                        }
-
-                        console.log('✅ Data loaded from Supabase');
-
-                    } catch (error) {
-                        console.error('Error loading from Supabase:', error);
-                        this.showNotification('Error loading data: ' + error.message, 'error');
-                        this.loadFromLocalStorage();
-                    }
-                },
-
-                loadFromLocalStorage() {
-                    try {
-                        const saved = localStorage.getItem('checklistData');
-                        if (saved) {
-                            const data = JSON.parse(saved);
-                            this.employees = data.employees || [];
-                            this.tasks = data.tasks || [];
-                            this.dailyChecklist = data.dailyChecklist || {};
-                        } else {
-                            // Initialize with default data if no saved data
-                            this.initializeDefaultData();
-                        }
-
-                        console.log('📦 Data loaded from localStorage');
-
-                    } catch (error) {
-                        console.error('Error loading from localStorage:', error);
-                        this.initializeDefaultData();
-                    }
-                },
-
-                initializeDefaultData() {
-                    this.employees = [
-                        { id: 1, name: 'Kyai Abuhasanuddin', is_default: true },
-                        { id: 2, name: 'Ust. Agus Rohmawan', is_default: true },
-                        { id: 3, name: 'KH. Sukri Nursalim', is_default: true },
-                        { id: 4, name: 'Ust. H. Hari Setiawan', is_default: true },
-                        { id: 5, name: 'Ust. Taufiq', is_default: true },
-                        { id: 6, name: 'Ust. Abdullah', is_default: true },
-                        { id: 7, name: 'Syafiq', is_default: true }
-                    ];
-
-                    this.tasks = [
-                        { id: 1, name: 'Qiyamul lail', is_default: true },
-                        { id: 2, name: 'Shubuh berjamaah (ikhwan)', is_default: true },
-                        { id: 3, name: 'Sedekah (utamakan shubuh)', is_default: true },
-                        { id: 4, name: 'Dhuha', is_default: true },
-                        { id: 5, name: 'Istighfar & sholawat', is_default: true },
-                        { id: 6, name: 'Doa untuk Ibnu Katsir', is_default: true }
-                    ];
-
-                    this.dailyChecklist = {};
-                },
-                
-                setupTime() {
-                    this.updateCurrentTime();
-                    setInterval(() => {
-                        this.updateCurrentTime();
-                    }, 1000);
-                },
-                
-                updateCurrentTime() {
-                    const jakarta = this.getJakartaDate();
-                    this.currentTime = jakarta.toLocaleString('id-ID', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit'
-                    });
-                },
-                
-                getJakartaDate() {
-                    const now = new Date();
-                    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-                    return new Date(utc + (7 * 3600000)); // UTC+7
-                },
-                
-                getCurrentDate() {
-                    const jakarta = this.getJakartaDate();
-                    return jakarta.toISOString().split('T')[0];
-                },
-                
-                getCurrentDateString() {
-                    const jakarta = this.getJakartaDate();
-                    return jakarta.toLocaleDateString('id-ID', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                    });
-                },
-
-                // Authentication
-                async loginAsUser() {
-                    if (!this.selectedEmployee) {
-                        this.showNotification('Silakan pilih nama Anda', 'error');
-                        return;
-                    }
-                    
-                    this.isLoggingIn = true;
-                    
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                    
-                    this.currentUserId = this.selectedEmployee;
-                    this.currentUser = this.getEmployeeName(this.selectedEmployee);
-                    this.isAdmin = false;
-                    this.isLoggedIn = true;
-                    this.isLoggingIn = false;
-                    
-                    this.showNotification(`Selamat datang, ${this.currentUser}!`, 'success');
-                },
-                
-                async loginAsAdmin() {
-                    if (!this.adminCredentials.username || !this.adminCredentials.password) {
-                        this.showNotification('Username dan password harus diisi', 'error');
-                        return;
-                    }
-                    
-                    const admin = this.admins.find(a => 
-                        a.username === this.adminCredentials.username && 
-                        a.password === this.adminCredentials.password
-                    );
-                    
-                    if (!admin) {
-                        this.showNotification('Username atau password salah', 'error');
-                        return;
-                    }
-                    
-                    this.isLoggingIn = true;
-                    
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                    
-                    this.currentUser = 'Administrator';
-                    this.isAdmin = true;
-                    this.isLoggedIn = true;
-                    this.isLoggingIn = false;
-                    
-                    this.showNotification('Login admin berhasil!', 'success');
-                },
-                
-                logout() {
-                    this.isLoggedIn = false;
-                    this.isAdmin = false;
-                    this.currentUser = '';
-                    this.currentUserId = null;
-                    this.selectedEmployee = '';
-                    this.adminCredentials = { username: '', password: '' };
-                    this.selectedEmployeeForChecklist = '';
-                    this.activeTab = 'daily';
-                    this.loginMode = 'user';
-                    
-                    this.showNotification('Anda telah logout', 'info');
-                },
-
-                // Helper functions
-                getEmployeeName(employeeId) {
-                    const employee = this.employees.find(e => e.id == employeeId);
-                    return employee ? employee.name : 'Unknown';
-                },
-
-                getCurrentUserName() {
-                    return this.isAdmin ? 'Administrator' : this.currentUser;
-                },
-
-                // Dark mode
-                toggleDarkMode() {
-                    this.darkMode = !this.darkMode;
-                    localStorage.setItem('darkMode', this.darkMode);
-                    
-                    if (this.darkMode) {
-                        document.documentElement.classList.add('dark');
-                    } else {
-                        document.documentElement.classList.remove('dark');
-                    }
-                },
-
-                // Checklist operations
-                loadEmployeeChecklist() {
-                    if (!this.selectedEmployeeForChecklist) return;
-                    
-                    this.loadingChecklist = true;
-                    
-                    setTimeout(() => {
-                        this.loadingChecklist = false;
-                    }, 500);
-                },
-                
-                isTaskCompleted(taskId) {
-                    const employeeId = this.isAdmin ? this.selectedEmployeeForChecklist : this.currentUserId;
-                    if (!employeeId || !this.dailyChecklist[employeeId] || !this.dailyChecklist[employeeId][taskId]) {
-                        return false;
-                    }
-                    return this.dailyChecklist[employeeId][taskId].completed;
-                },
-
-                isTaskCompletedByEmployee(employeeId, taskId) {
-                    if (!this.dailyChecklist[employeeId] || !this.dailyChecklist[employeeId][taskId]) {
-                        return false;
-                    }
-                    return this.dailyChecklist[employeeId][taskId].completed;
-                },
-                
-                getTaskTimestamp(taskId) {
-                    const employeeId = this.isAdmin ? this.selectedEmployeeForChecklist : this.currentUserId;
-                    if (!employeeId || !this.dailyChecklist[employeeId] || !this.dailyChecklist[employeeId][taskId]) {
-                        return '';
-                    }
-                    
-                    const timestamp = this.dailyChecklist[employeeId][taskId].timestamp;
-                    if (!timestamp) return '';
-                    
-                    return new Date(timestamp).toLocaleTimeString('id-ID', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    });
-                },
-                
-                async toggleTask(taskId, completed) {
-                    const employeeId = this.isAdmin ? this.selectedEmployeeForChecklist : this.currentUserId;
-                    if (!employeeId) return;
-                    
-                    // Update local state
-                    if (!this.dailyChecklist[employeeId]) {
-                        this.dailyChecklist[employeeId] = {};
-                    }
-                    
-                    if (!this.dailyChecklist[employeeId][taskId]) {
-                        this.dailyChecklist[employeeId][taskId] = {
-                            completed: false,
-                            timestamp: null
-                        };
-                    }
-                    
-                    this.dailyChecklist[employeeId][taskId].completed = completed;
-                    this.dailyChecklist[employeeId][taskId].timestamp = completed ? new Date().toISOString() : null;
-                    
-                    // Save to Supabase if connected
-                    if (this.supabaseConnected) {
-                        try {
-                            const today = this.getCurrentDate();
+                        <!-- Monthly Report Table -->
+                        <div x-show="!loadingMonthlyReport && monthlyData && monthlyData.length > 0" 
+                             class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
                             
-                            if (completed) {
-                                // Insert or update
-                                const { error } = await window.supabaseClient
-                                    .from('daily_checklist')
-                                    .upsert({
-                                        employee_id: employeeId,
-                                        task_id: taskId,
-                                        completed: true,
-                                        check_date: today,
-                                        timestamp: new Date().toISOString()
-                                    });
-                                
-                                if (error) throw error;
-                            } else {
-                                // Delete
-                                const { error } = await window.supabaseClient
-                                    .from('daily_checklist')
-                                    .delete()
-                                    .eq('employee_id', employeeId)
-                                    .eq('task_id', taskId)
-                                    .eq('check_date', today);
-                                
-                                if (error) throw error;
-                            }
-                            
-                            console.log('✅ Task updated in Supabase');
-                            
-                        } catch (error) {
-                            console.error('Error syncing with Supabase:', error);
-                            this.showNotification('Error syncing: ' + error.message, 'error');
-                        }
-                    }
-                    
-                    this.autoSave();
-                    
-                    const taskName = this.tasks.find(t => t.id == taskId)?.name || 'Task';
-                    this.showNotification(
-                        `${taskName} telah ${completed ? 'diselesaikan' : 'dibatalkan'}`,
-                        completed ? 'success' : 'info'
-                    );
-                },
-                
-                async markAllTasks(completed) {
-                    if (!this.selectedEmployeeForChecklist) return;
-                    
-                    for (const task of this.tasks) {
-                        await this.toggleTask(task.id, completed);
-                    }
-                    
-                    this.showNotification(
-                        `Semua tugas telah ${completed ? 'diselesaikan' : 'direset'}`,
-                        completed ? 'success' : 'info'
-                    );
-                },
-                
-                getCompletionPercentage() {
-                    const employeeId = this.isAdmin ? this.selectedEmployeeForChecklist : this.currentUserId;
-                    if (!employeeId || !this.dailyChecklist[employeeId] || this.tasks.length === 0) return 0;
-                    
-                    const completed = this.tasks.filter(task => 
-                        this.dailyChecklist[employeeId][task.id] && this.dailyChecklist[employeeId][task.id].completed
-                    ).length;
-                    
-                    return Math.round((completed / this.tasks.length) * 100);
-                },
+                            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                                <h4 class="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                                    Rekap Detil per Peserta - <span x-text="getSelectedMonthLabel()"></span>
+                                </h4>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">
+                                    Menampilkan jumlah checklist yang diselesaikan untuk setiap tugas
+                                </p>
+                            </div>
 
-                getEmployeeCompletion(employeeId) {
-                    if (!this.dailyChecklist[employeeId] || this.tasks.length === 0) return 0;
-                    
-                    const completed = this.tasks.filter(task => 
-                        this.dailyChecklist[employeeId] && 
-                        this.dailyChecklist[employeeId][task.id] && 
-                        this.dailyChecklist[employeeId][task.id].completed
-                    ).length;
-                    
-                    return Math.round((completed / this.tasks.length) * 100);
-                },
+                            <!-- Responsive Table Container -->
+                            <div class="monthly-report-grid overflow-x-auto">
+                                <table class="monthly-report-table w-full">
+                                    <thead class="bg-gray-50 dark:bg-gray-700">
+                                        <tr>
+                                            <th class="employee-name-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                                Peserta
+                                            </th>
+                                            <template x-for="task in tasks" :key="task.id">
+                                                <th class="task-cell px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                                    <div class="transform -rotate-45 origin-center whitespace-nowrap" x-text="task.name"></div>
+                                                </th>
+                                            </template>
+                                            <th class="px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-widerTotal
+                                           </th>
+                                           <th class="px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                               %
+                                           </th>
+                                       </tr>
+                                   </thead>
+                                   <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                       <template x-for="employeeData in monthlyData" :key="employeeData.employee_id">
+                                           <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                               <td class="employee-name-cell px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                                                   <div class="flex items-center space-x-2">
+                                                       <div class="w-8 h-8 bg-primary-500 text-white rounded-full flex items-center justify-center text-xs font-semibold"
+                                                            x-text="employeeData.employee_name.charAt(0).toUpperCase()"></div>
+                                                       <span x-text="employeeData.employee_name"></span>
+                                                   </div>
+                                               </td>
+                                               <template x-for="task in tasks" :key="task.id">
+                                                   <td class="task-cell px-3 py-4 whitespace-nowrap text-center">
+                                                       <div class="heat-map-cell inline-flex items-center justify-center w-12 h-8 rounded text-sm font-semibold"
+                                                            :class="getHeatMapClass(getTaskCount(employeeData, task.id))">
+                                                           <span x-text="getTaskCount(employeeData, task.id)"></span>
+                                                       </div>
+                                                   </td>
+                                               </template>
+                                               <td class="px-3 py-4 whitespace-nowrap text-center text-sm font-semibold text-gray-900 dark:text-white">
+                                                   <span x-text="employeeData.total_completed"></span>
+                                               </td>
+                                               <td class="px-3 py-4 whitespace-nowrap text-center text-sm">
+                                                   <div class="flex items-center justify-center space-x-2">
+                                                       <span class="font-semibold text-primary-500" 
+                                                             x-text="employeeData.completion_percentage + '%'"></span>
+                                                       <div class="w-16 bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                                                           <div class="bg-gradient-to-r from-primary-500 to-orange-400 h-2 rounded-full transition-all duration-500"
+                                                                :style="`width: ${employeeData.completion_percentage}%`"></div>
+                                                       </div>
+                                                   </div>
+                                               </td>
+                                           </tr>
+                                       </template>
+                                   </tbody>
+                                   <tfoot class="bg-gray-100 dark:bg-gray-600">
+                                       <tr>
+                                           <td class="employee-name-cell px-6 py-4 text-sm font-bold text-gray-900 dark:text-white">
+                                               TOTAL KESELURUHAN
+                                           </td>
+                                           <template x-for="task in tasks" :key="task.id">
+                                               <td class="task-cell px-3 py-4 text-center text-sm font-bold text-gray-900 dark:text-white">
+                                                   <span x-text="getTotalTaskCount(task.id)"></span>
+                                               </td>
+                                           </template>
+                                           <td class="px-3 py-4 text-center text-sm font-bold text-gray-900 dark:text-white">
+                                               <span x-text="monthlyStats.totalCompleted"></span>
+                                           </td>
+                                           <td class="px-3 py-4 text-center text-sm font-bold text-primary-500">
+                                               <span x-text="monthlyStats.completionRate + '%'"></span>
+                                           </td>
+                                       </tr>
+                                   </tfoot>
+                               </table>
+                           </div>
 
-                getAverageCompletion() {
-                    if (this.employees.length === 0) return 0;
-                    
-                    let total = 0;
-                    this.employees.forEach(employee => {
-                        total += this.getEmployeeCompletion(employee.id);
-                    });
-                    
-                    return Math.round(total / this.employees.length);
-                },
+                           <!-- Legend -->
+                           <div class="p-6 border-t border-gray-200 dark:border-gray-700">
+                               <h5 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Heat Map Legend:</h5>
+                               <div class="flex flex-wrap items-center gap-4 text-xs">
+                                   <div class="flex items-center space-x-2">
+                                       <div class="w-4 h-4 rounded heat-map-0"></div>
+                                       <span class="text-gray-600 dark:text-gray-400">0 kali</span>
+                                   </div>
+                                   <div class="flex items-center space-x-2">
+                                       <div class="w-4 h-4 rounded heat-map-1"></div>
+                                       <span class="text-gray-600 dark:text-gray-400">1-5 kali</span>
+                                   </div>
+                                   <div class="flex items-center space-x-2">
+                                       <div class="w-4 h-4 rounded heat-map-2"></div>
+                                       <span class="text-gray-600 dark:text-gray-400">6-10 kali</span>
+                                   </div>
+                                   <div class="flex items-center space-x-2">
+                                       <div class="w-4 h-4 rounded heat-map-3"></div>
+                                       <span class="text-gray-600 dark:text-gray-400">11-15 kali</span>
+                                   </div>
+                                   <div class="flex items-center space-x-2">
+                                       <div class="w-4 h-4 rounded heat-map-4"></div>
+                                       <span class="text-gray-600 dark:text-gray-400">16-25 kali</span>
+                                   </div>
+                                   <div class="flex items-center space-x-2">
+                                       <div class="w-4 h-4 rounded heat-map-5"></div>
+                                       <span class="text-gray-600 dark:text-gray-400">26+ kali</span>
+                                   </div>
+                               </div>
+                           </div>
+                       </div>
 
-                getTopPerformer() {
-                    if (this.employees.length === 0) return 'N/A';
-                    
-                    let topEmployee = this.employees[0];
-                    let maxCompletion = this.getEmployeeCompletion(topEmployee.id);
-                    
-                    this.employees.forEach(employee => {
-                        const completion = this.getEmployeeCompletion(employee.id);
-                        if (completion > maxCompletion) {
-                            maxCompletion = completion;
-                            topEmployee = employee;
-                        }
-                    });
-                    
-                    return topEmployee.name;
-                },
-                
-                // Employee management
-                async addEmployee() {
-                    const name = this.newEmployee.trim();
-                    if (!name) {
-                        this.showNotification('Nama peserta tidak boleh kosong', 'error');
-                        return;
-                    }
-                    
-                    if (this.employees.find(e => e.name === name)) {
-                        this.showNotification('Peserta dengan nama tersebut sudah ada', 'error');
-                        return;
-                    }
-                    
-                    const newEmployee = {
-                        name: name,
-                        is_default: false
-                    };
+                       <!-- Empty State -->
+                       <div x-show="!loadingMonthlyReport && (!monthlyData || monthlyData.length === 0)" 
+                            class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-12 text-center">
+                           <div class="mx-auto w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
+                               <i class="fas fa-chart-line text-2xl text-gray-400"></i>
+                           </div>
+                           <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Tidak ada data untuk bulan ini</h3>
+                           <p class="text-gray-600 dark:text-gray-400">Pilih bulan yang berbeda atau pastikan ada data checklist yang tersimpan.</p>
+                       </div>
 
-                    // Add to Supabase if connected
-                    if (this.supabaseConnected) {
-                        try {
-                            const { data, error } = await window.supabaseClient
-                                .from('employees')
-                                .insert([newEmployee])
-                                .select();
-                            
-                            if (error) throw error;
-                            if (data && data[0]) {
-                                this.employees.push(data[0]);
-                            }
-                            
-                            console.log('✅ Employee added to Supabase');
-                            
-                        } catch (error) {
-                            console.error('Error adding employee to Supabase:', error);
-                            this.showNotification('Error adding employee: ' + error.message, 'error');
-                            return;
-                        }
-                    } else {
-                        // Add locally
-                        newEmployee.id = Math.max(...this.employees.map(e => e.id), 0) + 1;
-                        this.employees.push(newEmployee);
-                    }
-                    
-                    this.newEmployee = '';
-                    this.autoSave();
-                    this.showNotification(`Peserta ${name} berhasil ditambahkan`, 'success');
-                },
-                
-                async removeEmployee(employeeId) {
-                    const employee = this.employees.find(e => e.id === employeeId);
-                    if (!employee) return;
-                    
-                    if (!confirm(`Hapus peserta ${employee.name}? Data terkait akan terhapus.`)) return;
-                    
-                    // Remove from Supabase if connected
-                    if (this.supabaseConnected) {
-                        try {
-                            const { error } = await window.supabaseClient
-                                .from('employees')
-                                .delete()
-                                .eq('id', employeeId);
-                            
-                            if (error) throw error;
-                            
-                            console.log('✅ Employee removed from Supabase');
-                            
-                        } catch (error) {
-                            console.error('Error removing employee from Supabase:', error);
-                            this.showNotification('Error removing employee: ' + error.message, 'error');
-                            return;
-                        }
-                    }
-                    
-                    // Remove locally
-                    this.employees = this.employees.filter(e => e.id !== employeeId);
-                    delete this.dailyChecklist[employeeId];
-                    
-                    // Clear selection if removed employee was selected
-                    if (this.selectedEmployeeForChecklist === employeeId) {
-                        this.selectedEmployeeForChecklist = '';
-                    }
-                    
-                    this.autoSave();
-                    this.showNotification(`Peserta ${employee.name} berhasil dihapus`, 'success');
-                },
-                
-                // Task management
-                async addTask() {
-                    const name = this.newTask.trim();
-                    if (!name) {
-                        this.showNotification('Nama tugas tidak boleh kosong', 'error');
-                        return;
-                    }
-                    
-                    if (this.tasks.find(t => t.name === name)) {
-                        this.showNotification('Tugas dengan nama tersebut sudah ada', 'error');
-                        return;
-                    }
-                    
-                    const newTask = {
-                        name: name,
-                        is_default: false
-                    };
+                   </div>
+               </template>
 
-                    // Add to Supabase if connected
-                    if (this.supabaseConnected) {
-                        try {
-                            const { data, error } = await window.supabaseClient
-                                .from('tasks')
-                                .insert([newTask])
-                                .select();
-                            
-                            if (error) throw error;
-                            if (data && data[0]) {
-                                this.tasks.push(data[0]);
-                            }
-                            
-                            console.log('✅ Task added to Supabase');
-                            
-                        } catch (error) {
-                            console.error('Error adding task to Supabase:', error);
-                            this.showNotification('Error adding task: ' + error.message, 'error');
-                            return;
-                        }
-                    } else {
-                        // Add locally
-                        newTask.id = Math.max(...this.tasks.map(t => t.id), 0) + 1;
-                        this.tasks.push(newTask);
-                    }
-                    
-                    this.newTask = '';
-                    this.autoSave();
-                    this.showNotification(`Tugas ${name} berhasil ditambahkan`, 'success');
-                },
-                
-                async removeTask(taskId) {
-                    const task = this.tasks.find(t => t.id === taskId);
-                    if (!task) return;
-                    
-                    if (!confirm(`Hapus tugas ${task.name}? Data terkait akan terhapus.`)) return;
-                    
-                    // Remove from Supabase if connected
-                    if (this.supabaseConnected) {
-                        try {
-                            const { error } = await window.supabaseClient
-                                .from('tasks')
-                                .delete()
-                                .eq('id', taskId);
-                            
-                            if (error) throw error;
-                            
-                            console.log('✅ Task removed from Supabase');
-                            
-                        } catch (error) {
-                            console.error('Error removing task from Supabase:', error);
-                            this.showNotification('Error removing task: ' + error.message, 'error');
-                            return;
-                        }
-                    }
-                    
-                    // Remove locally
-                    this.tasks = this.tasks.filter(t => t.id !== taskId);
-                    
-                    // Remove task from all employees' checklists
-                    Object.keys(this.dailyChecklist).forEach(employeeId => {
-                        if (this.dailyChecklist[employeeId]) {
-                            delete this.dailyChecklist[employeeId][taskId];
-                        }
-                    });
-                    
-                    this.autoSave();
-                    this.showNotification(`Tugas ${task.name} berhasil dihapus`, 'success');
-                },
-                
-                // Data operations
-                exportData(format) {
-                    const data = {
-                        employees: this.employees,
-                        tasks: this.tasks,
-                        dailyChecklist: this.dailyChecklist,
-                        exportDate: new Date().toISOString(),
-                        supabaseConnected: this.supabaseConnected
-                    };
-                    
-                    if (format === 'json') {
-                        this.downloadJSON(data, 'checklist-data.json');
-                    } else if (format === 'csv') {
-                        this.downloadCSV(data, 'checklist-data.csv');
-                    }
-                    
-                    this.showNotification(`Data berhasil diekspor sebagai ${format.toUpperCase()}`, 'success');
-                },
-                
-                downloadJSON(data, filename) {
-                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = filename;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                },
-                
-                downloadCSV(data, filename) {
-                    let csv = 'Employee,Task,Completed,Date\n';
-                    
-                    Object.keys(data.dailyChecklist).forEach(employeeId => {
-                        const employeeName = this.getEmployeeName(employeeId);
-                        Object.keys(data.dailyChecklist[employeeId]).forEach(taskId => {
-                            const taskName = this.tasks.find(t => t.id == taskId)?.name || 'Unknown';
-                            const taskData = data.dailyChecklist[employeeId][taskId];
-                            const currentDate = this.getCurrentDate();
-                            csv += `${employeeName},${taskName},${taskData.completed ? 'Yes' : 'No'},${currentDate}\n`;
-                        });
-                    });
-                    
-                    const blob = new Blob([csv], { type: 'text/csv' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = filename;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                },
-                
-                // Storage operations
-                loadFromStorage() {
-                    try {
-                        const saved = localStorage.getItem('checklistData');
-                        if (saved) {
-                            const data = JSON.parse(saved);
-                            this.employees = data.employees || [];
-                            this.tasks = data.tasks || [];
-                            this.dailyChecklist = data.dailyChecklist || {};
-                        }
-                        
-                        const darkMode = localStorage.getItem('darkMode');
-                        if (darkMode !== null) {
-                            this.darkMode = darkMode === 'true';
-                            if (this.darkMode) {
-                                document.documentElement.classList.add('dark');
-                            }
-                        }
+           </div>
+       </div>
+   </div>
 
-                        // Load Supabase credentials
-                        const supabaseCredentials = localStorage.getItem('supabaseCredentials');
-                        if (supabaseCredentials) {
-                            const credentials = JSON.parse(supabaseCredentials);
-                            this.supabaseSetup.url = credentials.url;
-                            this.supabaseSetup.anonKey = credentials.anonKey;
-                            
-                            // Update global Supabase client
-                            window.supabaseClient = window.supabase.createClient(
-                                credentials.url,
-                                credentials.anonKey
-                            );
-                        }
-                        
-                    } catch (error) {
-                        console.error('Error loading from storage:', error);
-                    }
-                },
-                
-                saveToStorage() {
-                    try {
-                        const data = {
-                            employees: this.employees,
-                            tasks: this.tasks,
-                            dailyChecklist: this.dailyChecklist,
-                            lastSaved: new Date().toISOString()
-                        };
-                        localStorage.setItem('checklistData', JSON.stringify(data));
-                    } catch (error) {
-                        console.error('Error saving to storage:', error);
-                    }
-                },
-                
-                async autoSave() {
-                    this.autoSaving = true;
-                    
-                    this.saveToStorage();
-                    
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                    
-                    this.autoSaving = false;
-                    this.showSaved = true;
-                    
-                    setTimeout(() => {
-                        this.showSaved = false;
-                    }, 2000);
-                },
-                
-                // Notifications
-                showNotification(message, type = 'info') {
-                    const id = Date.now();
-                    const notification = {
-                        id,
-                        message,
-                        type,
-                        show: true
-                    };
-                    
-                    this.notifications.push(notification);
-                    
-                    setTimeout(() => {
-                        this.removeNotification(id);
-                    }, 5000);
-                },
-                
-                removeNotification(id) {
-                    const index = this.notifications.findIndex(n => n.id === id);
-                    if (index > -1) {
-                        this.notifications[index].show = false;
-                        setTimeout(() => {
-                            this.notifications.splice(index, 1);
-                        }, 300);
-                    }
-                }
-            };
-        }
-    </script>
+   <!-- Auto-save indicator -->
+   <div x-show="autoSaving" 
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 transform translate-y-2"
+        x-transition:enter-end="opacity-100 transform translate-y-0"
+        class="fixed bottom-4 left-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg">
+       <i class="fas fa-sync-alt animate-spin mr-2"></i>
+       Menyimpan...
+   </div>
+
+   <!-- Auto-saved indicator -->
+   <div x-show="showSaved" 
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 transform translate-y-2"
+        x-transition:enter-end="opacity-100 transform translate-y-0"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100 transform translate-y-0"
+        x-transition:leave-end="opacity-0 transform translate-y-2"
+        class="fixed bottom-4 left-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg">
+       <i class="fas fa-check mr-2"></i>
+       Tersimpan
+   </div>
+
+   <script>
+       function checklistApp() {
+           return {
+               // State variables
+               loading: true,
+               isLoggedIn: false,
+               isAdmin: false,
+               currentUser: '',
+               currentUserId: null,
+               loginMode: 'user',
+               selectedEmployee: '',
+               adminCredentials: { username: '', password: '' },
+               showPassword: false,
+               isLoggingIn: false,
+               darkMode: false,
+               
+               // UI state
+               activeTab: 'daily',
+               loadingChecklist: false,
+               autoSaving: false,
+               showSaved: false,
+               notifications: [],
+               
+               // Supabase
+               supabaseConnected: false,
+               connectionStatus: 'connecting',
+               connectingSupabase: false,
+               showSupabaseSetup: false,
+               supabaseSetup: {
+                   url: '',
+                   anonKey: ''
+               },
+               
+               // Data
+               employees: [],
+               tasks: [],
+               dailyChecklist: {},
+               
+               // Monthly report data
+               monthlyData: [],
+               monthlyTaskStats: [],
+               monthlyStats: {
+                   totalChecklist: 0,
+                   totalCompleted: 0,
+                   completionRate: 0,
+                   activeEmployees: 0
+               },
+               loadingMonthlyReport: false,
+               selectedMonth: '',
+               availableMonths: [],
+               
+               // Admin credentials
+               admins: [
+                   { username: 'admin', password: 'adminqu321' }
+               ],
+               
+               // Form data
+               newEmployee: '',
+               newTask: '',
+               selectedEmployeeForChecklist: '',
+               taskSearch: '',
+               
+               // Time
+               currentTime: '',
+               
+               // Computed properties
+               get currentChecklist() {
+                   if (this.isAdmin && this.selectedEmployeeForChecklist) {
+                       return this.tasks;
+                   } else if (!this.isAdmin && this.currentUserId) {
+                       return this.tasks;
+                   }
+                   return [];
+               },
+               
+               get filteredTasks() {
+                   if (!this.taskSearch) return this.currentChecklist;
+                   return this.currentChecklist.filter(task => 
+                       task.name.toLowerCase().includes(this.taskSearch.toLowerCase())
+                   );
+               },
+
+               // Initialize
+               async init() {
+                   this.loadFromStorage();
+                   this.setupTime();
+                   this.initializeAvailableMonths();
+                   
+                   // Check Supabase connection
+                   await this.checkSupabaseConnection();
+                   
+                   // Load data
+                   await this.loadData();
+                   
+                   // Simulate loading
+                   setTimeout(() => {
+                       this.loading = false;
+                   }, 2000);
+                   
+                   // Auto-save interval
+                   setInterval(() => {
+                       this.saveToStorage();
+                   }, 30000);
+               },
+
+               initializeAvailableMonths() {
+                   // Set July 2025 as the program start date - CHANGE THIS LINE TO MODIFY START DATE
+                   const programStartYear = 2025;
+                   const programStartMonth = 7; // July = 7, Change this number to change start month
+                   
+                   const now = new Date();
+                   const currentMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+                   this.selectedMonth = currentMonth;
+                   
+                   // Generate months from program start until current month
+                   this.availableMonths = [];
+                   const startDate = new Date(programStartYear, programStartMonth - 1, 1); // -1 because month is 0-indexed
+                   const currentDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                   
+                   let iterDate = new Date(startDate);
+                   while (iterDate <= currentDate) {
+                       const value = iterDate.getFullYear() + '-' + String(iterDate.getMonth() + 1).padStart(2, '0');
+                       const label = iterDate.toLocaleDateString('id-ID', { year: 'numeric', month: 'long' });
+                       this.availableMonths.push({ value, label });
+                       
+                       // Move to next month
+                       iterDate.setMonth(iterDate.getMonth() + 1);
+                   }
+                   
+                   // Reverse array so newest months appear first
+                   this.availableMonths.reverse();
+               },
+
+               async checkSupabaseConnection() {
+                   try {
+                       // Check if credentials look valid
+                       if (!SUPABASE_URL.includes('supabase.co') || !SUPABASE_ANON_KEY.startsWith('eyJ')) {
+                           throw new Error('Invalid credentials');
+                       }
+
+                       // Test connection
+                       const { data, error } = await window.supabaseClient
+                           .from('employees')
+                           .select('count')
+                           .limit(1);
+
+                       if (error) throw error;
+
+                       this.supabaseConnected = true;
+                       this.connectionStatus = 'online';
+                       console.log('✅ Supabase connected successfully');
+
+                   } catch (error) {
+                       console.error('Supabase connection failed:', error);
+                       this.supabaseConnected = false;
+                       this.connectionStatus = 'offline';
+                   }
+               },
+
+               async loadData() {
+                   if (this.supabaseConnected) {
+                       await this.loadFromSupabase();
+                   } else {
+                       this.loadFromLocalStorage();
+                   }
+               },
+
+               async loadFromSupabase() {
+                   try {
+                       // Load employees
+                       const { data: employees, error: empError } = await window.supabaseClient
+                           .from('employees')
+                           .select('*')
+                           .order('id');
+
+                       if (empError) throw empError;
+                       this.employees = employees || [];
+
+                       // Load tasks
+                       const { data: tasks, error: taskError } = await window.supabaseClient
+                           .from('tasks')
+                           .select('*')
+                           .order('id');
+
+                       if (taskError) throw taskError;
+                       this.tasks = tasks || [];
+
+                       // Load today's checklist
+                       const today = this.getCurrentDate();
+                       const { data: checklist, error: checkError } = await window.supabaseClient
+                           .from('daily_checklist')
+                           .select('*')
+                           .eq('check_date', today);
+
+                       if (checkError) throw checkError;
+
+                       // Process checklist data
+                       this.dailyChecklist = {};
+                       if (checklist) {
+                           checklist.forEach(item => {
+                               if (!this.dailyChecklist[item.employee_id]) {
+                                   this.dailyChecklist[item.employee_id] = {};
+                               }
+                               this.dailyChecklist[item.employee_id][item.task_id] = {
+                                   completed: item.completed,
+                                   timestamp: item.timestamp
+                               };
+                           });
+                       }
+
+                       console.log('✅ Data loaded from Supabase');
+
+                   } catch (error) {
+                       console.error('Error loading from Supabase:', error);
+                       this.showNotification('Error loading data: ' + error.message, 'error');
+                       this.loadFromLocalStorage();
+                   }
+               },
+
+               loadFromLocalStorage() {
+                   try {
+                       const saved = localStorage.getItem('checklistData');
+                       if (saved) {
+                           const data = JSON.parse(saved);
+                           this.employees = data.employees || [];
+                           this.tasks = data.tasks || [];
+                           this.dailyChecklist = data.dailyChecklist || {};
+                       } else {
+                           // Initialize with default data if no saved data
+                           this.initializeDefaultData();
+                       }
+
+                       console.log('📦 Data loaded from localStorage');
+
+                   } catch (error) {
+                       console.error('Error loading from localStorage:', error);
+                       this.initializeDefaultData();
+                   }
+               },
+
+               initializeDefaultData() {
+                   this.employees = [
+                       { id: 1, name: 'Kyai Abuhasanuddin', is_default: true },
+                       { id: 2, name: 'Ust. Agus Rohmawan', is_default: true },
+                       { id: 3, name: 'KH. Sukri Nursalim', is_default: true },
+                       { id: 4, name: 'Ust. H. Hari Setiawan', is_default: true },
+                       { id: 5, name: 'Ust. Taufiq', is_default: true },
+                       { id: 6, name: 'Ust. Abdullah', is_default: true },
+                       { id: 7, name: 'Syafiq', is_default: true }
+                   ];
+
+                   this.tasks = [
+                       { id: 1, name: 'Qiyamul lail', is_default: true },
+                       { id: 2, name: 'Shubuh berjamaah (ikhwan)', is_default: true },
+                       { id: 3, name: 'Sedekah (utamakan shubuh)', is_default: true },
+                       { id: 4, name: 'Dhuha', is_default: true },
+                       { id: 5, name: 'Istighfar & sholawat', is_default: true },
+                       { id: 6, name: 'Doa untuk Ibnu Katsir', is_default: true }
+                   ];
+
+                   this.dailyChecklist = {};
+               },
+               
+               setupTime() {
+                   this.updateCurrentTime();
+                   setInterval(() => {
+                       this.updateCurrentTime();
+                   }, 1000);
+               },
+               
+               updateCurrentTime() {
+                   const jakarta = this.getJakartaDate();
+                   this.currentTime = jakarta.toLocaleString('id-ID', {
+                       weekday: 'long',
+                       year: 'numeric',
+                       month: 'long',
+                       day: 'numeric',
+                       hour: '2-digit',
+                       minute: '2-digit',
+                       second: '2-digit'
+                   });
+               },
+               
+               getJakartaDate() {
+                   const now = new Date();
+                   const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+                   return new Date(utc + (7 * 3600000)); // UTC+7
+               },
+               
+               getCurrentDate() {
+                   const jakarta = this.getJakartaDate();
+                   return jakarta.toISOString().split('T')[0];
+               },
+               
+               getCurrentDateString() {
+                   const jakarta = this.getJakartaDate();
+                   return jakarta.toLocaleDateString('id-ID', {
+                       weekday: 'long',
+                       year: 'numeric',
+                       month: 'long',
+                       day: 'numeric'
+                   });
+               },
+
+               // Monthly Report Functions
+               async loadMonthlyReport() {
+                   if (!this.selectedMonth) return;
+                   
+                   this.loadingMonthlyReport = true;
+                   
+                   try {
+                       if (this.supabaseConnected) {
+                           await this.loadMonthlyFromSupabase();
+                       } else {
+                           this.loadMonthlyFromLocalStorage();
+                       }
+                   } catch (error) {
+                       console.error('Error loading monthly report:', error);
+                       this.showNotification('Error loading monthly report: ' + error.message, 'error');
+                   } finally {
+                       this.loadingMonthlyReport = false;
+                   }
+               },
+
+               async loadMonthlyFromSupabase() {
+                   const [year, month] = this.selectedMonth.split('-');
+                   const startDate = `${year}-${month.padStart(2, '0')}-01`;
+                   const endDate = `${year}-${month.padStart(2, '0')}-31`;
+
+                   // Load monthly checklist data
+                   const { data: monthlyChecklist, error } = await window.supabaseClient
+                       .from('daily_checklist')
+                       .select(`
+                           employee_id,
+                           task_id,
+                           check_date,
+                           employees(name),
+                           tasks(name)
+                       `)
+                       .gte('check_date', startDate)
+                       .lte('check_date', endDate)
+                       .eq('completed', true);
+
+                   if (error) throw error;
+
+                   this.processMonthlyData(monthlyChecklist || []);
+               },
+
+               loadMonthlyFromLocalStorage() {
+                   // For offline mode, we can only show current month data
+                   const [year, month] = this.selectedMonth.split('-');
+                   const currentDate = this.getCurrentDate();
+                   const [currentYear, currentMonth] = currentDate.split('-');
+                   
+                   if (year !== currentYear || month !== currentMonth) {
+                       this.monthlyData = [];
+                       this.monthlyTaskStats = [];
+                       this.calculateMonthlyStats();
+                       return;
+                   }
+
+                   // Convert current dailyChecklist to monthly format
+                   const monthlyChecklist = [];
+                   Object.keys(this.dailyChecklist).forEach(employeeId => {
+                       Object.keys(this.dailyChecklist[employeeId]).forEach(taskId => {
+                           if (this.dailyChecklist[employeeId][taskId].completed) {
+                               monthlyChecklist.push({
+                                   employee_id: parseInt(employeeId),
+                                   task_id: parseInt(taskId),
+                                   check_date: currentDate,
+                                   employees: { name: this.getEmployeeName(employeeId) },
+                                   tasks: { name: this.tasks.find(t => t.id == taskId)?.name || 'Unknown' }
+                               });
+                           }
+                       });
+                   });
+
+                   this.processMonthlyData(monthlyChecklist);
+               },
+
+               processMonthlyData(monthlyChecklist) {
+                   // Group by employee
+                   const groupedData = {};
+                   
+                   monthlyChecklist.forEach(item => {
+                       const employeeId = item.employee_id;
+                       if (!groupedData[employeeId]) {
+                           groupedData[employeeId] = {
+                               employee_id: employeeId,
+                               employee_name: item.employees.name,
+                               tasks: {},
+                               total_completed: 0
+                           };
+                       }
+                       
+                       const taskId = item.task_id;
+                       if (!groupedData[employeeId].tasks[taskId]) {
+                           groupedData[employeeId].tasks[taskId] = 0;
+                       }
+                       groupedData[employeeId].tasks[taskId]++;
+                       groupedData[employeeId].total_completed++;
+                   });
+
+                   // Convert to array and calculate percentages
+                   this.monthlyData = Object.values(groupedData).map(employeeData => {
+                       const maxPossible = this.tasks.length * this.getDaysInMonth();
+                       const completionPercentage = maxPossible > 0 ? 
+                           Math.round((employeeData.total_completed / maxPossible) * 100) : 0;
+                       
+                       return {
+                           ...employeeData,
+                           completion_percentage: completionPercentage
+                       };
+                   });
+
+                   // Sort by completion percentage (descending)
+                   this.monthlyData.sort((a, b) => b.completion_percentage - a.completion_percentage);
+
+                   // Calculate task performance statistics
+                   this.calculateTaskStats(monthlyChecklist);
+                   this.calculateMonthlyStats();
+               },
+
+               calculateTaskStats(monthlyChecklist) {
+                   // Group by task to analyze task performance
+                   const taskStats = {};
+                   
+                   // Initialize task stats with current tasks
+                   this.tasks.forEach(task => {
+                       taskStats[task.id] = {
+                           task_id: task.id,
+                           task_name: task.name,
+                           completed_count: 0,
+                           total_possible: this.employees.length * this.getDaysInMonth(),
+                           completion_rate: 0
+                       };
+                   });
+                   
+                   // Count completions per task
+                   monthlyChecklist.forEach(item => {
+                       if (taskStats[item.task_id]) {
+                           taskStats[item.task_id].completed_count++;
+                       }
+                   });
+                   
+                   // Calculate completion rates
+                   Object.values(taskStats).forEach(stat => {
+                       stat.completion_rate = stat.total_possible > 0 ? 
+                           Math.round((stat.completed_count / stat.total_possible) * 100) : 0;
+                   });
+                   
+                   // Convert to array and sort by completion rate (descending)
+                   this.monthlyTaskStats = Object.values(taskStats)
+                       .sort((a, b) => b.completion_rate - a.completion_rate);
+               },
+
+               calculateMonthlyStats() {
+                   const totalEmployees = this.employees.length;
+                   const activeEmployees = this.monthlyData.length;
+                   const totalCompleted = this.monthlyData.reduce((sum, emp) => sum + emp.total_completed, 0);
+                   const maxPossible = totalEmployees * this.tasks.length * this.getDaysInMonth();
+                   const completionRate = maxPossible > 0 ? Math.round((totalCompleted / maxPossible) * 100) : 0;
+
+                   this.monthlyStats = {
+                       totalChecklist: maxPossible,
+                       totalCompleted: totalCompleted,
+                       completionRate: completionRate,
+                       activeEmployees: activeEmployees
+                   };
+               },
+
+               getDaysInMonth() {
+                   const [year, month] = this.selectedMonth.split('-');
+                   return new Date(year, month, 0).getDate();
+               },
+
+               getSelectedMonthLabel() {
+                   const month = this.availableMonths.find(m => m.value === this.selectedMonth);
+                   return month ? month.label : this.selectedMonth;
+               },
+
+               getTaskCount(employeeData, taskId) {
+                   return employeeData.tasks[taskId] || 0;
+               },
+
+               getTotalTaskCount(taskId) {
+                   return this.monthlyData.reduce((total, emp) => total + this.getTaskCount(emp, taskId), 0);
+               },
+
+               getHeatMapClass(count) {
+                   if (count === 0) return 'heat-map-0';
+                   if (count <= 5) return 'heat-map-1';
+                   if (count <= 10) return 'heat-map-2';
+                   if (count <= 15) return 'heat-map-3';
+                   if (count <= 25) return 'heat-map-4';
+                   return 'heat-map-5';
+               },
+
+               // Task Performance Analysis Functions
+               getTaskPerformanceLabel(percentage) {
+                   if (percentage >= 80) return 'Excellent';
+                   if (percentage >= 50) return 'Good';
+                   return 'Needs Improvement';
+               },
+
+               getTasksByPerformance(category) {
+                   if (!this.monthlyTaskStats) return [];
+                   
+                   return this.monthlyTaskStats.filter(task => {
+                       if (category === 'excellent') return task.completion_rate >= 80;
+                       if (category === 'good') return task.completion_rate >= 50 && task.completion_rate < 80;
+                       if (category === 'poor') return task.completion_rate < 50;
+                       return false;
+                   });
+               },
+
+               getMostPerformedTask() {
+                   if (!this.monthlyTaskStats || this.monthlyTaskStats.length === 0) return 'N/A';
+                   const best = this.monthlyTaskStats.reduce((prev, current) => 
+                       (prev.completion_rate > current.completion_rate) ? prev : current
+                   );
+                   return best.task_name + ' (' + best.completion_rate + '%)';
+               },
+
+               getLeastPerformedTask() {
+                   if (!this.monthlyTaskStats || this.monthlyTaskStats.length === 0) return 'N/A';
+                   const worst = this.monthlyTaskStats.reduce((prev, current) => 
+                       (prev.completion_rate < current.completion_rate) ? prev : current
+                   );
+                   return worst.task_name + ' (' + worst.completion_rate + '%)';
+               },
+
+               exportMonthlyReport() {
+                   if (!this.monthlyData || this.monthlyData.length === 0) {
+                       this.showNotification('Tidak ada data untuk diekspor', 'error');
+                       return;
+                   }
+
+                   const monthLabel = this.getSelectedMonthLabel();
+                   let csv = `Rekap Bulanan - ${monthLabel}\n\n`;
+                   
+                   // Task Performance Summary
+                   csv += '=== ANALISIS PERFORMANCE TUGAS ===\n';
+                   csv += 'Ranking,Tugas,Completed,Total Possible,Completion Rate,Status\n';
+                   this.monthlyTaskStats.forEach((taskStat, index) => {
+                       const status = taskStat.completion_rate >= 80 ? 'Excellent' : 
+                                     taskStat.completion_rate >= 50 ? 'Good' : 'Needs Improvement';
+                       csv += `${index + 1},${taskStat.task_name},${taskStat.completed_count},${taskStat.total_possible},${taskStat.completion_rate}%,${status}\n`;
+                   });
+                   
+                   // Performance Category Summary
+                   csv += '\n=== RINGKASAN KATEGORI PERFORMANCE ===\n';
+                   csv += `Excellent (≥80%),${this.getTasksByPerformance('excellent').length} tugas\n`;
+                   csv += `Good (50-79%),${this.getTasksByPerformance('good').length} tugas\n`;
+                   csv += `Needs Improvement (<50%),${this.getTasksByPerformance('poor').length} tugas\n`;
+                   
+                   csv += '\n=== REKAP PER PESERTA ===\n';
+                   csv += 'Peserta,' + this.tasks.map(t => t.name).join(',') + ',Total,Persentase,Status\n';
+                   
+                   this.monthlyData.forEach(employeeData => {
+                       const taskCounts = this.tasks.map(task => this.getTaskCount(employeeData, task.id));
+                       const status = employeeData.completion_percentage >= 80 ? 'Excellent' : 
+                                     employeeData.completion_percentage >= 50 ? 'Good' : 'Needs Improvement';
+                       csv += `${employeeData.employee_name},${taskCounts.join(',')},${employeeData.total_completed},${employeeData.completion_percentage}%,${status}\n`;
+                   });
+
+                   // Add totals
+                   const totalCounts = this.tasks.map(task => this.getTotalTaskCount(task.id));
+                   csv += `\nTOTAL,${totalCounts.join(',')},${this.monthlyStats.totalCompleted},${this.monthlyStats.completionRate}%,Overall\n`;
+
+                   // Add statistics
+                   csv += '\n=== STATISTIK KESELURUHAN ===\n';
+                   csv += `Total Checklist Possible,${this.monthlyStats.totalChecklist}\n`;
+                   csv += `Total Completed,${this.monthlyStats.totalCompleted}\n`;
+                   csv += `Overall Completion Rate,${this.monthlyStats.completionRate}%\n`;
+                   csv += `Active Employees,${this.monthlyStats.activeEmployees}\n`;
+                   csv += `Most Performed Task,${this.getMostPerformedTask()}\n`;
+                   csv += `Least Performed Task,${this.getLeastPerformedTask()}\n`;
+                   csv += `Periode,${monthLabel}\n`;
+                   csv += `Export Date,${new Date().toLocaleString('id-ID')}\n`;
+
+                   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                   const url = URL.createObjectURL(blob);
+                   const a = document.createElement('a');
+                   a.href = url;
+                   a.download = `rekap-bulanan-${this.selectedMonth}.csv`;
+                   a.click();
+                   URL.revokeObjectURL(url);
+
+                   this.showNotification('Rekap bulanan berhasil diekspor!', 'success');
+               },
+
+               // Authentication
+               async loginAsUser() {
+                   if (!this.selectedEmployee) {
+                       this.showNotification('Silakan pilih nama Anda', 'error');
+                       return;
+                   }
+                   
+                   this.isLoggingIn = true;
+                   
+                   await new Promise(resolve => setTimeout(resolve, 1000));
+                   
+                   this.currentUserId = this.selectedEmployee;
+                   this.currentUser = this.getEmployeeName(this.selectedEmployee);
+                   this.isAdmin = false;
+                   this.isLoggedIn = true;
+                   this.isLoggingIn = false;
+                   
+                   this.showNotification(`Selamat datang, ${this.currentUser}!`, 'success');
+               },
+               
+               async loginAsAdmin() {
+                   if (!this.adminCredentials.username || !this.adminCredentials.password) {
+                       this.showNotification('Username dan password harus diisi', 'error');
+                       return;
+                   }
+                   
+                   const admin = this.admins.find(a => 
+                       a.username === this.adminCredentials.username && 
+                       a.password === this.adminCredentials.password
+                   );
+                   
+                   if (!admin) {
+                       this.showNotification('Username atau password salah', 'error');
+                       return;
+                   }
+                   
+                   this.isLoggingIn = true;
+                   
+                   await new Promise(resolve => setTimeout(resolve, 1000));
+                   
+                   this.currentUser = 'Administrator';
+                   this.isAdmin = true;
+                   this.isLoggedIn = true;
+                   this.isLoggingIn = false;
+                   
+                   this.showNotification('Login admin berhasil!', 'success');
+               },
+               
+               logout() {
+                   this.isLoggedIn = false;
+                   this.isAdmin = false;
+                   this.currentUser = '';
+                   this.currentUserId = null;
+                   this.selectedEmployee = '';
+                   this.adminCredentials = { username: '', password: '' };
+                   this.selectedEmployeeForChecklist = '';
+                   this.activeTab = 'daily';
+                   this.loginMode = 'user';
+                   
+                   this.showNotification('Anda telah logout', 'info');
+               },
+
+               // Helper functions
+               getEmployeeName(employeeId) {
+                   const employee = this.employees.find(e => e.id == employeeId);
+                   return employee ? employee.name : 'Unknown';
+               },
+
+               getCurrentUserName() {
+                   return this.isAdmin ? 'Administrator' : this.currentUser;
+               },
+
+               // Dark mode
+               toggleDarkMode() {
+                   this.darkMode = !this.darkMode;
+                   localStorage.setItem('darkMode', this.darkMode);
+                   
+                   if (this.darkMode) {
+                       document.documentElement.classList.add('dark');
+                   } else {
+                       document.documentElement.classList.remove('dark');
+                   }
+               },
+
+               // Checklist operations
+               loadEmployeeChecklist() {
+                   if (!this.selectedEmployeeForChecklist) return;
+                   
+                   this.loadingChecklist = true;
+                   
+                   setTimeout(() => {
+                       this.loadingChecklist = false;
+                   }, 500);
+               },
+               
+               isTaskCompleted(taskId) {
+                   const employeeId = this.isAdmin ? this.selectedEmployeeForChecklist : this.currentUserId;
+                   if (!employeeId || !this.dailyChecklist[employeeId] || !this.dailyChecklist[employeeId][taskId]) {
+                       return false;
+                   }
+                   return this.dailyChecklist[employeeId][taskId].completed;
+               },
+
+               isTaskCompletedByEmployee(employeeId, taskId) {
+                   if (!this.dailyChecklist[employeeId] || !this.dailyChecklist[employeeId][taskId]) {
+                       return false;
+                   }
+                   return this.dailyChecklist[employeeId][taskId].completed;
+               },
+               
+               getTaskTimestamp(taskId) {
+                   const employeeId = this.isAdmin ? this.selectedEmployeeForChecklist : this.currentUserId;
+                   if (!employeeId || !this.dailyChecklist[employeeId] || !this.dailyChecklist[employeeId][taskId]) {
+                       return '';
+                   }
+                   
+                   const timestamp = this.dailyChecklist[employeeId][taskId].timestamp;
+                   if (!timestamp) return '';
+                   
+                   return new Date(timestamp).toLocaleTimeString('id-ID', {
+                       hour: '2-digit',
+                       minute: '2-digit'
+                   });
+               },
+               
+               async toggleTask(taskId, completed) {
+                   const employeeId = this.isAdmin ? this.selectedEmployeeForChecklist : this.currentUserId;
+                   if (!employeeId) return;
+                   
+                   // Update local state
+                   if (!this.dailyChecklist[employeeId]) {
+                       this.dailyChecklist[employeeId] = {};
+                   }
+                   
+                   if (!this.dailyChecklist[employeeId][taskId]) {
+                       this.dailyChecklist[employeeId][taskId] = {
+                           completed: false,
+                           timestamp: null
+                       };
+                   }
+                   
+                   this.dailyChecklist[employeeId][taskId].completed = completed;
+                   this.dailyChecklist[employeeId][taskId].timestamp = completed ? new Date().toISOString() : null;
+                   
+                   // Save to Supabase if connected
+                   if (this.supabaseConnected) {
+                       try {
+                           const today = this.getCurrentDate();
+                           
+                           if (completed) {
+                               // Insert or update
+                               const { error } = await window.supabaseClient
+                                   .from('daily_checklist')
+                                   .upsert({
+                                       employee_id: employeeId,
+                                       task_id: taskId,
+                                       completed: true,
+                                       check_date: today,
+                                       timestamp: new Date().toISOString()
+                                   });
+                               
+                               if (error) throw error;
+                           } else {
+                               // Delete
+                               const { error } = await window.supabaseClient
+                                   .from('daily_checklist')
+                                   .delete()
+                                   .eq('employee_id', employeeId)
+                                   .eq('task_id', taskId)
+                                   .eq('check_date', today);
+                               
+                               if (error) throw error;
+                           }
+                           
+                           console.log('✅ Task updated in Supabase');
+                           
+                       } catch (error) {
+                           console.error('Error syncing with Supabase:', error);
+                           this.showNotification('Error syncing: ' + error.message, 'error');
+                       }
+                   }
+                   
+                   this.autoSave();
+                   
+                   const taskName = this.tasks.find(t => t.id == taskId)?.name || 'Task';
+                   this.showNotification(
+                       `${taskName} telah ${completed ? 'diselesaikan' : 'dibatalkan'}`,
+                       completed ? 'success' : 'info'
+                   );
+               },
+               
+               async markAllTasks(completed) {
+                   if (!this.selectedEmployeeForChecklist) return;
+                   
+                   for (const task of this.tasks) {
+                       await this.toggleTask(task.id, completed);
+                   }
+                   
+                   this.showNotification(
+                       `Semua tugas telah ${completed ? 'diselesaikan' : 'direset'}`,
+                       completed ? 'success' : 'info'
+                   );
+               },
+               
+               getCompletionPercentage() {
+                   const employeeId = this.isAdmin ? this.selectedEmployeeForChecklist : this.currentUserId;
+                   if (!employeeId || !this.dailyChecklist[employeeId] || this.tasks.length === 0) return 0;
+                   
+                   const completed = this.tasks.filter(task => 
+                       this.dailyChecklist[employeeId][task.id] && this.dailyChecklist[employeeId][task.id].completed
+                   ).length;
+                   
+                   return Math.round((completed / this.tasks.length) * 100);
+               },
+               
+               // Employee management
+               async addEmployee() {
+                   const name = this.newEmployee.trim();
+                   if (!name) {
+                       this.showNotification('Nama peserta tidak boleh kosong', 'error');
+                       return;
+                   }
+                   
+                   if (this.employees.find(e => e.name === name)) {
+                       this.showNotification('Peserta dengan nama tersebut sudah ada', 'error');
+                       return;
+                   }
+                   
+                   const newEmployee = {
+                       name: name,
+                       is_default: false
+                   };
+
+                   // Add to Supabase if connected
+                   if (this.supabaseConnected) {
+                       try {
+                           const { data, error } = await window.supabaseClient
+                               .from('employees')
+                               .insert([newEmployee])
+                               .select();
+                           
+                           if (error) throw error;
+                           if (data && data[0]) {
+                               this.employees.push(data[0]);
+                           }
+                           
+                           console.log('✅ Employee added to Supabase');
+                           
+                       } catch (error) {
+                           console.error('Error adding employee to Supabase:', error);
+                           this.showNotification('Error adding employee: ' + error.message, 'error');
+                           return;
+                       }
+                   } else {
+                       // Add locally
+                       newEmployee.id = Math.max(...this.employees.map(e => e.id), 0) + 1;
+                       this.employees.push(newEmployee);
+                   }
+                   
+                   this.newEmployee = '';
+                   this.autoSave();
+                   this.showNotification(`Peserta ${name} berhasil ditambahkan`, 'success');
+               },
+               
+               async removeEmployee(employeeId) {
+                   const employee = this.employees.find(e => e.id === employeeId);
+                   if (!employee) return;
+                   
+                   if (!confirm(`Hapus peserta ${employee.name}? Data terkait akan terhapus.`)) return;
+                   
+                   // Remove from Supabase if connected
+                   if (this.supabaseConnected) {
+                       try {
+                           const { error } = await window.supabaseClient
+                               .from('employees')
+                               .delete()
+                               .eq('id', employeeId);
+                           
+                           if (error) throw error;
+                           
+                           console.log('✅ Employee removed from Supabase');
+                           
+                       } catch (error) {
+                           console.error('Error removing employee from Supabase:', error);
+                           this.showNotification('Error removing employee: ' + error.message, 'error');
+                           return;
+                       }
+                   }
+                   
+                   // Remove locally
+                   this.employees = this.employees.filter(e => e.id !== employeeId);
+                   delete this.dailyChecklist[employeeId];
+                   
+                   // Clear selection if removed employee was selected
+                   if (this.selectedEmployeeForChecklist === employeeId) {
+                       this.selectedEmployeeForChecklist = '';
+                   }
+                   
+                   this.autoSave();
+                   this.showNotification(`Peserta ${employee.name} berhasil dihapus`, 'success');
+               },
+               
+               // Task management
+               async addTask() {
+                   const name = this.newTask.trim();
+                   if (!name) {
+                       this.showNotification('Nama tugas tidak boleh kosong', 'error');
+                       return;
+                   }
+                   
+                   if (this.tasks.find(t => t.name === name)) {
+                       this.showNotification('Tugas dengan nama tersebut sudah ada', 'error');
+                       return;
+                   }
+                   
+                   const newTask = {
+                       name: name,
+                       is_default: false
+                   };
+
+                   // Add to Supabase if connected
+                   if (this.supabaseConnected) {
+                       try {
+                           const { data, error } = await window.supabaseClient
+                               .from('tasks')
+                               .insert([newTask])
+                               .select();
+                           
+                           if (error) throw error;
+                           if (data && data[0]) {
+                               this.tasks.push(data[0]);
+                           }
+                           
+                           console.log('✅ Task added to Supabase');
+                           
+                       } catch (error) {
+                           console.error('Error adding task to Supabase:', error);
+                           this.showNotification('Error adding task: ' + error.message, 'error');
+                           return;
+                       }
+                   } else {
+                       // Add locally
+                       newTask.id = Math.max(...this.tasks.map(t => t.id), 0) + 1;
+                       this.tasks.push(newTask);
+                   }
+                   
+                   this.newTask = '';
+                   this.autoSave();
+                   this.showNotification(`Tugas ${name} berhasil ditambahkan`, 'success');
+               },
+               
+               async removeTask(taskId) {
+                   const task = this.tasks.find(t => t.id === taskId);
+                   if (!task) return;
+                   
+                   if (!confirm(`Hapus tugas ${task.name}? Data terkait akan terhapus.`)) return;
+                   
+                   // Remove from Supabase if connected
+                   if (this.supabaseConnected) {
+                       try {
+                           const { error } = await window.supabaseClient
+                               .from('tasks')
+                               .delete()
+                               .eq('id', taskId);
+                           
+                           if (error) throw error;
+                           
+                           console.log('✅ Task removed from Supabase');
+                           
+                       } catch (error) {
+                           console.error('Error removing task from Supabase:', error);
+                           this.showNotification('Error removing task: ' + error.message, 'error');
+                           return;
+                       }
+                   }
+                   
+                   // Remove locally
+                   this.tasks = this.tasks.filter(t => t.id !== taskId);
+                   
+                   // Remove task from all employees' checklists
+                   Object.keys(this.dailyChecklist).forEach(employeeId => {
+                       if (this.dailyChecklist[employeeId]) {
+                           delete this.dailyChecklist[employeeId][taskId];
+                       }
+                   });
+                   
+                   this.autoSave();
+                   this.showNotification(`Tugas ${task.name} berhasil dihapus`, 'success');
+               },
+               
+               // Data operations
+               exportData(format) {
+                   const data = {
+                       employees: this.employees,
+                       tasks: this.tasks,
+                       dailyChecklist: this.dailyChecklist,
+                       exportDate: new Date().toISOString(),
+                       supabaseConnected: this.supabaseConnected
+                   };
+                   
+                   if (format === 'json') {
+                       this.downloadJSON(data, 'checklist-data.json');
+                   } else if (format === 'csv') {
+                       this.downloadCSV(data, 'checklist-data.csv');
+                   }
+                   
+                   this.showNotification(`Data berhasil diekspor sebagai ${format.toUpperCase()}`, 'success');
+               },
+               
+               downloadJSON(data, filename) {
+                   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                   const url = URL.createObjectURL(blob);
+                   const a = document.createElement('a');
+                   a.href = url;
+                   a.download = filename;
+                   a.click();
+                   URL.revokeObjectURL(url);
+               },
+               
+               downloadCSV(data, filename) {
+                   let csv = 'Employee,Task,Completed,Date\n';
+                   
+                   Object.keys(data.dailyChecklist).forEach(employeeId => {
+                       const employeeName = this.getEmployeeName(employeeId);
+                       Object.keys(data.dailyChecklist[employeeId]).forEach(taskId => {
+                           const taskName = this.tasks.find(t => t.id == taskId)?.name || 'Unknown';
+                           const taskData = data.dailyChecklist[employeeId][taskId];
+                           const currentDate = this.getCurrentDate();
+                           csv += `${employeeName},${taskName},${taskData.completed ? 'Yes' : 'No'},${currentDate}\n`;
+                       });
+                   });
+                   
+                   const blob = new Blob([csv], { type: 'text/csv' });
+                   const url = URL.createObjectURL(blob);
+                   const a = document.createElement('a');
+                   a.href = url;
+                   a.download = filename;
+                   a.click();
+                   URL.revokeObjectURL(url);
+               },
+               
+               // Storage operations
+               loadFromStorage() {
+                   try {
+                       const saved = localStorage.getItem('checklistData');
+                       if (saved) {
+                           const data = JSON.parse(saved);
+                           this.employees = data.employees || [];
+                           this.tasks = data.tasks || [];
+                           this.dailyChecklist = data.dailyChecklist || {};
+                       }
+                       
+                       const darkMode = localStorage.getItem('darkMode');
+                       if (darkMode !== null) {
+                           this.darkMode = darkMode === 'true';
+                           if (this.darkMode) {
+                               document.documentElement.classList.add('dark');
+                           }
+                       }
+                       
+                   } catch (error) {
+                       console.error('Error loading from storage:', error);
+                   }
+               },
+               
+               saveToStorage() {
+                   try {
+                       const data = {
+                           employees: this.employees,
+                           tasks: this.tasks,
+                           dailyChecklist: this.dailyChecklist,
+                           lastSaved: new Date().toISOString()
+                       };
+                       localStorage.setItem('checklistData', JSON.stringify(data));
+                   } catch (error) {
+                       console.error('Error saving to storage:', error);
+                   }
+               },
+               
+               async autoSave() {
+                   this.autoSaving = true;
+                   
+                   this.saveToStorage();
+                   
+                   await new Promise(resolve => setTimeout(resolve, 1000));
+                   
+                   this.autoSaving = false;
+                   this.showSaved = true;
+                   
+                   setTimeout(() => {
+                       this.showSaved = false;
+                   }, 2000);
+               },
+               
+               // Notifications
+               showNotification(message, type = 'info') {
+                   const id = Date.now();
+                   const notification = {
+                       id,
+                       message,
+                       type,
+                       show: true
+                   };
+                   
+                   this.notifications.push(notification);
+                   
+                   setTimeout(() => {
+                       this.removeNotification(id);
+                   }, 5000);
+               },
+               
+               removeNotification(id) {
+                   const index = this.notifications.findIndex(n => n.id === id);
+                   if (index > -1) {
+                       this.notifications[index].show = false;
+                       setTimeout(() => {
+                           this.notifications.splice(index, 1);
+                       }, 300);
+                   }
+               }
+           };
+       }
+   </script>
 </body>
 </html>
